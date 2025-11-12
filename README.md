@@ -1,36 +1,244 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ⏱️ Time Tracker - Hexagonal Architecture Learning Project
 
-## Getting Started
+A simple time tracking application built with Next.js 16, demonstrating **Hexagonal Architecture** (Ports & Adapters) combined with **Vertical Slice Architecture**.
 
-First, run the development server:
+## 🎯 Project Purpose
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+This is an **educational project** designed to learn and understand:
+
+- **Hexagonal Architecture** (Clean Architecture / Ports & Adapters)
+- **Vertical Slice Architecture** (feature-based organization)
+- **Functional Programming** approach in TypeScript
+- **Server Actions** in Next.js 16 (without API routes)
+- **Dependency Inversion Principle**
+
+## 🏗️ Architecture Overview
+
+### Hexagonal Architecture Layers
+
+```
+┌─────────────────────────────────────────────────┐
+│              Presentation Layer                 │
+│         (UI - React Components)                 │
+└────────────────┬────────────────────────────────┘
+                 │
+                 ↓
+┌─────────────────────────────────────────────────┐
+│    Infrastructure - Primary Adapters            │
+│         (Server Actions - HTTP)                 │
+└────────────────┬────────────────────────────────┘
+                 │
+                 ↓
+┌─────────────────────────────────────────────────┐
+│          Application Layer                      │
+│         (Use Cases / Ports)                     │
+└────────────────┬────────────────────────────────┘
+                 │
+                 ↓
+┌─────────────────────────────────────────────────┐
+│            Domain Layer                         │
+│       (Business Logic / Entities)               │
+└────────────────┬────────────────────────────────┘
+                 │
+                 ↓
+┌─────────────────────────────────────────────────┐
+│   Infrastructure - Secondary Adapters           │
+│         (Database / External APIs)              │
+└─────────────────────────────────────────────────┘
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Vertical Slice Structure
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Each feature is self-contained with all its layers:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+src/features/timer-tracking/
+├── domain/              # Business logic
+├── application/         # Use cases & ports
+├── infrastructure/      # Adapters (HTTP, DB)
+└── presentation/        # UI components
+```
 
-## Learn More
+## 📂 Project Structure
 
-To learn more about Next.js, take a look at the following resources:
+```
+src/
+├── features/
+│   └── timer-tracking/
+│       ├── domain/
+│       │   ├── time-record.types.ts      # Types & Zod schemas
+│       │   ├── time-record.factory.ts    # Factory functions
+│       │   └── time-record.utils.ts      # Domain utilities
+│       │
+│       ├── application/
+│       │   ├── ports/
+│       │   │   └── time-record.repository.ts  # Repository interface
+│       │   └── use-cases/
+│       │       ├── save-time-record.ts
+│       │       └── get-all-time-records.ts
+│       │
+│       ├── infrastructure/
+│       │   ├── http/
+│       │   │   └── time-record.actions.ts     # Server Actions
+│       │   └── persistence/
+│       │       └── in-memory-time-record.repository.ts
+│       │
+│       └── presentation/
+│           └── components/
+│               └── timer-page.tsx
+│
+└── app/
+    └── page.tsx
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🚀 Getting Started
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Prerequisites
 
-## Deploy on Vercel
+- Node.js 18+
+- npm/yarn/pnpm
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Installation
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+# Clone the repository
+git clone <repository-url>
+
+# Install dependencies
+npm install
+
+# Run development server
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## 🧪 Key Concepts Demonstrated
+
+### 1. Domain Layer (Core Business Logic)
+
+Pure business logic with **no external dependencies**:
+
+```typescript
+// domain/time-record.factory.ts
+export const createTimeRecord = (input: CreateTimeRecordInput): TimeRecord => {
+  const validated = CreateTimeRecordSchema.parse(input);
+
+  return {
+    id: crypto.randomUUID(),
+    description: validated.description.trim(),
+    durationInSeconds: validated.durationInSeconds,
+    createdAt: new Date(),
+  };
+};
+```
+
+### 2. Application Layer (Use Cases)
+
+Orchestrates domain logic, defines **ports** (interfaces):
+
+```typescript
+// application/ports/time-record.repository.ts
+export type TimeRecordRepository = {
+  save: (record: TimeRecord) => Promise<TimeRecord>;
+  findAll: () => Promise<TimeRecord[]>;
+};
+```
+
+### 3. Infrastructure Layer (Adapters)
+
+**Primary Adapters** (Input - Server Actions):
+
+```typescript
+// infrastructure/http/time-record.actions.ts
+'use server';
+export async function saveTimeRecordAction(
+  description: string,
+  duration: number
+) {
+  return await saveTimeRecordUseCase({
+    description,
+    durationInSeconds: duration,
+  });
+}
+```
+
+**Secondary Adapters** (Output - Repository):
+
+```typescript
+// infrastructure/persistence/in-memory-time-record.repository.ts
+export const createInMemoryRepository = (): TimeRecordRepository => {
+  // Implementation details...
+};
+```
+
+### 4. Presentation Layer (UI)
+
+Pure React components that call Server Actions:
+
+```typescript
+// presentation/components/timer-page.tsx
+const handleSave = async () => {
+  const result = await saveTimeRecordAction(description, seconds);
+  // Handle result...
+};
+```
+
+## 🎓 Learning Resources
+
+### Dependency Flow
+
+```
+Presentation → Infrastructure (Primary) → Application → Domain ← Infrastructure (Secondary)
+```
+
+**Golden Rule**: Inner layers should NOT depend on outer layers.
+
+### Why This Architecture?
+
+- ✅ **Testable**: Each layer can be tested independently
+- ✅ **Maintainable**: Clear separation of concerns
+- ✅ **Flexible**: Easy to swap implementations (e.g., change from InMemory to SQL)
+- ✅ **Scalable**: Add features without affecting existing code
+
+## 🛠️ Tech Stack
+
+- **Framework**: Next.js 16 (App Router)
+- **Language**: TypeScript
+- **Validation**: Zod
+- **Styling**: Tailwind CSS
+- **Icons**: Lucide React
+
+## 📝 Features
+
+- ⏱️ Start/Stop timer
+- 💾 Save time records with descriptions
+- 📋 View history of tracked time
+- ✅ Input validation with Zod
+
+## 🔄 Next Steps (Future Enhancements)
+
+- [ ] Replace InMemory repository with SQLite/PostgreSQL
+- [ ] Add authentication
+- [ ] Add editing/deleting records
+- [ ] Add categories/tags
+- [ ] Export data to CSV
+- [ ] Add unit tests
+
+## 📚 Further Reading
+
+- [Hexagonal Architecture (Alistair Cockburn)](https://alistair.cockburn.us/hexagonal-architecture/)
+- [Clean Architecture (Robert C. Martin)](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
+- [Vertical Slice Architecture (Jimmy Bogard)](https://www.jimmybogard.com/vertical-slice-architecture/)
+
+## 📄 License
+
+MIT License - Feel free to use this project for learning purposes.
+
+## 🤝 Contributing
+
+This is a learning project. Feel free to fork and experiment!
+
+---
+
+**Note**: This project prioritizes **clarity and learning** over production-ready features. The goal is to understand architectural patterns, not to build a complete application.
