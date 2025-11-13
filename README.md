@@ -81,7 +81,8 @@ src/
 │       │   ├── http/
 │       │   │   └── time-record.actions.ts     # Server Actions
 │       │   └── persistence/
-│       │       └── in-memory-time-record.repository.ts
+│       │       ├── in-memory-time-record.repository.ts
+│       │       └── repository.instance.ts     # DI Container
 │       │
 │       └── presentation/
 │           └── components/
@@ -168,8 +169,17 @@ export async function saveTimeRecordAction(
 ```typescript
 // infrastructure/persistence/in-memory-time-record.repository.ts
 export const createInMemoryRepository = (): TimeRecordRepository => {
-  // Implementation details...
+  const records: TimeRecord[] = [];
+  return {
+    save: async (record) => {
+      records.push(record);
+      return record;
+    },
+  };
 };
+
+// infrastructure/persistence/repository.instance.ts (DI Container)
+export const timeRecordRepository = createInMemoryRepository();
 ```
 
 ### 4. Presentation Layer (UI)

@@ -73,11 +73,21 @@ type TimeRecord = {
   description: string;
 };
 
-// Factory functions
-const createTimeRecord = (input: CreateInput): TimeRecord => ({
+// Factory functions (not singletons!)
+export const createTimeRecord = (input: CreateInput): TimeRecord => ({
   id: crypto.randomUUID(),
   ...input,
 });
+
+// Factory for repositories
+export const createInMemoryRepository = (): TimeRecordRepository => {
+  const records: TimeRecord[] = [];
+  return {
+    save: async (record) => {
+      /* ... */
+    },
+  };
+};
 ```
 
 **DON'T**:
@@ -87,6 +97,12 @@ const createTimeRecord = (input: CreateInput): TimeRecord => ({
 class TimeRecord {
   constructor(public id: string) {}
 }
+
+// Singleton exports from repository
+const records: TimeRecord[] = [];
+export const repository = {
+  save: async () => {},
+}; // ❌ Export factory function instead
 ```
 
 ### 2. Use Zod for Validation
@@ -231,14 +247,16 @@ Presentation uses → Infrastructure (Primary Adapters) only ✓
    };
    ```
 
-2. **Swap implementation**:
+2. **Update DI Container** (`infrastructure/persistence/repository.instance.ts`):
 
    ```typescript
    // Before
-   const repository = createInMemoryRepository();
+   import { createInMemoryRepository } from './in-memory-time-record.repository';
+   export const timeRecordRepository = createInMemoryRepository();
 
-   // After
-   const repository = createPostgresRepository();
+   // After - Change in ONE file only!
+   import { createPostgresRepository } from './postgres-time-record.repository';
+   export const timeRecordRepository = createPostgresRepository();
    ```
 
 3. **No changes needed** in Domain, Application, or Presentation!
@@ -269,12 +287,25 @@ Presentation uses → Infrastructure (Primary Adapters) only ✓
 3. **Implement in adapter** (`infrastructure/persistence/...`):
 
    ```typescript
-   delete: async (id) => {
-     // Implementation
-   }
+   // in-memory-time-record.repository.ts
+   export const createInMemoryRepository = (): TimeRecordRepository => {
+     const records: TimeRecord[] = [];
+     return {
+       delete: async (id) => {
+         // Implementation
+       },
+     };
+   };
    ```
 
-4. **Create Server Action** (`infrastructure/http/time-record.actions.ts`):
+4. **Update DI Container** (`infrastructure/persistence/repository.instance.ts`):
+
+   ```typescript
+   // Re-export updated instance
+   export const timeRecordRepository = createInMemoryRepository();
+   ```
+
+5. **Create Server Action** (`infrastructure/http/time-record.actions.ts`):
 
    ```typescript
    'use server';
@@ -283,7 +314,7 @@ Presentation uses → Infrastructure (Primary Adapters) only ✓
    }
    ```
 
-5. **Call from UI** (`presentation/components/...`)
+6. **Call from UI** (`presentation/components/...`)
 
 ---
 
