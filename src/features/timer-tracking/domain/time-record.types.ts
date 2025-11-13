@@ -1,19 +1,16 @@
 import { z } from 'zod';
 
-// Schema de validación con Zod
+export const CreateTimeRecordSchema = z.object({
+  description: z.string().min(1, 'Description is required').trim(),
+  durationInSeconds: z.number().positive('Duration must be greater than 0'),
+});
+
 export const TimeRecordSchema = z.object({
   id: z.string(),
-  description: z.string().min(1, 'La descripción es requerida'),
-  durationInSeconds: z.number().positive('La duración debe ser mayor a 0'),
+  description: z.string(),
+  durationInSeconds: z.number(),
   createdAt: z.date(),
 });
 
-// Schema para crear (sin id ni fecha)
-export const CreateTimeRecordSchema = z.object({
-  description: z.string().min(1, 'La descripción es requerida'),
-  durationInSeconds: z.number().positive('La duración debe ser mayor a 0'),
-});
-
-// Tipos inferidos de los schemas
-export type TimeRecord = z.infer<typeof TimeRecordSchema>;
 export type CreateTimeRecordInput = z.infer<typeof CreateTimeRecordSchema>;
+export type TimeRecord = z.infer<typeof TimeRecordSchema>;

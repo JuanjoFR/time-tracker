@@ -1,7 +1,6 @@
-import { TimeRecord } from '@/features/timer-tracking/domain/time-record.types';
+import type { TimeRecord } from '@/features/timer-tracking/domain/time-record.types';
 import { timeRecordRepository } from '@/features/timer-tracking/infrastructure/persistence/in-memory-time-record.repository';
-
-type Result<T> = { success: true; data: T } | { success: false; error: string };
+import type { Result } from './save-time-record';
 
 export const getAllTimeRecordsUseCase = async (): Promise<
   Result<TimeRecord[]>
@@ -12,7 +11,7 @@ export const getAllTimeRecordsUseCase = async (): Promise<
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Error desconocido',
+      error: error instanceof Error ? error.message : 'Unknown error occurred',
     };
   }
 };

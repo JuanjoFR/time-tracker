@@ -1,7 +1,7 @@
-import { TimeRecordRepository } from '@/features/timer-tracking/application/ports/time-record.repository';
-import { TimeRecord } from '@/features/timer-tracking/domain/time-record.types';
+import type { TimeRecordRepository } from '@/features/timer-tracking/application/ports/time-record.repository';
+import type { TimeRecord } from '@/features/timer-tracking/domain/time-record.types';
 
-export const createInMemoryRepository = (): TimeRecordRepository => {
+const createInMemoryRepository = (): TimeRecordRepository => {
   const records: TimeRecord[] = [];
 
   return {
@@ -12,11 +12,12 @@ export const createInMemoryRepository = (): TimeRecordRepository => {
 
     findAll: async () => {
       return [...records].sort(
-        (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
     },
   };
 };
 
-// Singleton
+// Singleton instance
 export const timeRecordRepository = createInMemoryRepository();
