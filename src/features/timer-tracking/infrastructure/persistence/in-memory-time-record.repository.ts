@@ -1,13 +1,7 @@
 import type { TimeRecordRepository } from '@/features/timer-tracking/application/ports/time-record.repository';
 import type { TimeRecord } from '@/features/timer-tracking/domain/time-record.types';
 
-/**
- * Creates an in-memory time record repository for development and testing.
- * Data is stored in memory and will be lost when the application restarts.
- *
- * @returns A repository implementation that stores records in memory
- */
-export const createInMemoryTimeRecordRepository = (): TimeRecordRepository => {
+export const createInMemoryRepository = (): TimeRecordRepository => {
   const records: TimeRecord[] = [];
 
   return {
@@ -24,9 +18,3 @@ export const createInMemoryTimeRecordRepository = (): TimeRecordRepository => {
     },
   };
 };
-
-/**
- * Singleton instance of the in-memory time record repository.
- * This ensures data persistence across the application during the session.
- */
-export const timeRecordRepository = createInMemoryTimeRecordRepository();

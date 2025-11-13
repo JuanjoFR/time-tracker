@@ -73,11 +73,21 @@ type TimeRecord = {
   description: string;
 };
 
-// Factory functions
-const createTimeRecord = (input: CreateInput): TimeRecord => ({
+// Factory functions (not singletons!)
+export const createTimeRecord = (input: CreateInput): TimeRecord => ({
   id: crypto.randomUUID(),
   ...input,
 });
+
+// Factory for repositories
+export const createInMemoryRepository = (): TimeRecordRepository => {
+  const records: TimeRecord[] = [];
+  return {
+    save: async (record) => {
+      /* ... */
+    },
+  };
+};
 ```
 
 **DON'T**:
@@ -87,6 +97,12 @@ const createTimeRecord = (input: CreateInput): TimeRecord => ({
 class TimeRecord {
   constructor(public id: string) {}
 }
+
+// Singleton exports from repository
+const records: TimeRecord[] = [];
+export const repository = {
+  save: async () => {},
+}; // ❌ Export factory function instead
 ```
 
 ### 2. Use Zod for Validation
@@ -124,35 +140,7 @@ export async function POST(request: Request) {
 }
 ```
 
-### 4. Use React Hook Form + shadcn/ui
-
-**DO**:
-
-```typescript
-// React Hook Form with Zod validation
-const form = useForm<FormValues>({
-  resolver: zodResolver(formSchema),
-  defaultValues: { description: '' },
-});
-
-// shadcn/ui Form components
-<Form {...form}>
-  <FormField
-    name="description"
-    render={({ field }) => (
-      <FormItem>
-        <FormLabel>Description</FormLabel>
-        <FormControl>
-          <Input {...field} />
-        </FormControl>
-        <FormMessage />
-      </FormItem>
-    )}
-  />
-</Form>;
-```
-
-### 5. Type-Safe Error Handling
+### 4. Type-Safe Error Handling
 
 **DO**:
 
@@ -247,33 +235,31 @@ Presentation uses → Infrastructure (Primary Adapters) only ✓
    ```typescript
    import { TimeRecordRepository } from '@/features/timer-tracking/application/ports/time-record.repository';
 
-   export const createPostgresTimeRecordRepository =
-     (): TimeRecordRepository => {
-       return {
-         save: async (record) => {
-           // PostgreSQL implementation
-         },
-         findAll: async () => {
-           // PostgreSQL implementation
-         },
-       };
+   export const createPostgresRepository = (): TimeRecordRepository => {
+     return {
+       save: async (record) => {
+         // PostgreSQL implementation
+       },
+       findAll: async () => {
+         // PostgreSQL implementation
+       },
      };
-
-   // New singleton instance
-   export const timeRecordRepository = createPostgresTimeRecordRepository();
+   };
    ```
 
-2. **Update imports** in use cases:
+2. **Update DI Container** (`infrastructure/persistence/repository.instance.ts`):
 
    ```typescript
    // Before
-   import { timeRecordRepository } from '../infrastructure/persistence/in-memory-time-record.repository';
+   import { createInMemoryRepository } from './in-memory-time-record.repository';
+   export const timeRecordRepository = createInMemoryRepository();
 
-   // After
-   import { timeRecordRepository } from '../infrastructure/persistence/postgres-time-record.repository';
+   // After - Change in ONE file only!
+   import { createPostgresRepository } from './postgres-time-record.repository';
+   export const timeRecordRepository = createPostgresRepository();
    ```
 
-3. **No changes needed** in Domain logic or business rules!
+3. **No changes needed** in Domain, Application, or Presentation!
 
 ---
 
@@ -301,12 +287,25 @@ Presentation uses → Infrastructure (Primary Adapters) only ✓
 3. **Implement in adapter** (`infrastructure/persistence/...`):
 
    ```typescript
-   delete: async (id) => {
-     // Implementation
-   }
+   // in-memory-time-record.repository.ts
+   export const createInMemoryRepository = (): TimeRecordRepository => {
+     const records: TimeRecord[] = [];
+     return {
+       delete: async (id) => {
+         // Implementation
+       },
+     };
+   };
    ```
 
-4. **Create Server Action** (`infrastructure/http/time-record.actions.ts`):
+4. **Update DI Container** (`infrastructure/persistence/repository.instance.ts`):
+
+   ```typescript
+   // Re-export updated instance
+   export const timeRecordRepository = createInMemoryRepository();
+   ```
+
+5. **Create Server Action** (`infrastructure/http/time-record.actions.ts`):
 
    ```typescript
    'use server';
@@ -315,7 +314,7 @@ Presentation uses → Infrastructure (Primary Adapters) only ✓
    }
    ```
 
-5. **Call from UI** (`presentation/components/...`)
+6. **Call from UI** (`presentation/components/...`)
 
 ---
 

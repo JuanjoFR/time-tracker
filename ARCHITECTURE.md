@@ -198,7 +198,7 @@ Implement ports defined by the application layer.
 
 ```typescript
 // infrastructure/persistence/in-memory-time-record.repository.ts
-export const createInMemoryTimeRecordRepository = (): TimeRecordRepository => {
+export const createInMemoryRepository = (): TimeRecordRepository => {
   const records: TimeRecord[] = [];
 
   return {
@@ -206,16 +206,9 @@ export const createInMemoryTimeRecordRepository = (): TimeRecordRepository => {
       records.push(record);
       return record;
     },
-    findAll: async () =>
-      [...records].sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      ),
+    findAll: async () => [...records],
   };
 };
-
-// Singleton instance for simplicity in this learning project
-export const timeRecordRepository = createInMemoryTimeRecordRepository();
 ```
 
 ---
@@ -463,21 +456,12 @@ For learning purposes, we start with in-memory storage:
 - Easy to understand
 - Can be replaced with real DB later (that's the point of ports!)
 
-**Current Implementation**:
-
-We use a **singleton pattern** for simplicity in this learning project:
-
-```typescript
-// Singleton instance
-export const timeRecordRepository = createInMemoryTimeRecordRepository();
-```
-
-**Migration Path for Production**:
+**Migration Path**:
 
 ```typescript
 // Easy to swap:
-// const repository = createInMemoryTimeRecordRepository();
-const repository = createPostgresTimeRecordRepository();
+// const repository = createInMemoryRepository();
+const repository = createPostgresRepository();
 ```
 
 ---

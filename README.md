@@ -81,7 +81,8 @@ src/
 │       │   ├── http/
 │       │   │   └── time-record.actions.ts     # Server Actions
 │       │   └── persistence/
-│       │       └── in-memory-time-record.repository.ts
+│       │       ├── in-memory-time-record.repository.ts
+│       │       └── repository.instance.ts     # DI Container
 │       │
 │       └── presentation/
 │           └── components/
@@ -167,27 +168,29 @@ export async function saveTimeRecordAction(
 
 ```typescript
 // infrastructure/persistence/in-memory-time-record.repository.ts
-export const createInMemoryTimeRecordRepository = (): TimeRecordRepository => {
-  // Implementation details...
+export const createInMemoryRepository = (): TimeRecordRepository => {
+  const records: TimeRecord[] = [];
+  return {
+    save: async (record) => {
+      records.push(record);
+      return record;
+    },
+  };
 };
 
-// Singleton instance for simple learning project
-export const timeRecordRepository = createInMemoryTimeRecordRepository();
+// infrastructure/persistence/repository.instance.ts (DI Container)
+export const timeRecordRepository = createInMemoryRepository();
 ```
 
 ### 4. Presentation Layer (UI)
 
-React Hook Form components with shadcn/ui:
+Pure React components that call Server Actions:
 
 ```typescript
-// presentation/components/timer-card.tsx
-const form = useForm<TimerFormValues>({
-  resolver: zodResolver(timerFormSchema),
-});
-
-const onSubmit = async (values: TimerFormValues) => {
-  const result = await saveTimeRecordAction(values.description, seconds);
-  // Handle result with Sonner notifications...
+// presentation/components/timer-page.tsx
+const handleSave = async () => {
+  const result = await saveTimeRecordAction(description, seconds);
+  // Handle result...
 };
 ```
 
@@ -212,9 +215,7 @@ Presentation → Infrastructure (Primary) → Application → Domain ← Infrast
 
 - **Framework**: Next.js 16 (App Router)
 - **Language**: TypeScript
-- **Forms**: React Hook Form + Zod validation
-- **UI Components**: shadcn/ui
-- **Notifications**: Sonner
+- **Validation**: Zod
 - **Styling**: Tailwind CSS
 - **Icons**: Lucide React
 

@@ -1,5 +1,5 @@
 import type { TimeRecord } from '@/features/timer-tracking/domain/time-record.types';
-import { timeRecordRepository } from '@/features/timer-tracking/infrastructure/persistence/in-memory-time-record.repository';
+import { timeRecordRepository } from '@/features/timer-tracking/infrastructure/persistence/repository.instance';
 import type { Result } from './save-time-record';
 
 export const getAllTimeRecordsUseCase = async (): Promise<
