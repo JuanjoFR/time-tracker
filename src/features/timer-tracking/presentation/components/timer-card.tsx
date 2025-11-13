@@ -1,25 +1,53 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { Play, Square, Save } from 'lucide-react';
+import { toast } from 'sonner';
 import { saveTimeRecordAction } from '@/features/timer-tracking/infrastructure/http/time-record.actions';
 import { formatDuration } from '@/features/timer-tracking/domain/time-record.utils';
+import { Button } from '@/shared/components/ui/button';
+import { Input } from '@/shared/components/ui/input';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/shared/components/ui/form';
+
+// Form validation schema
+const timerFormSchema = z.object({
+  description: z.string().min(1, 'Description is required').trim(),
+});
+
+type TimerFormValues = z.infer<typeof timerFormSchema>;
 
 export function TimerCard() {
+  // Timer state
   const [seconds, setSeconds] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
-  const [description, setDescription] = useState('');
-  const [error, setError] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
+  // Form setup
+  const form = useForm<TimerFormValues>({
+    resolver: zodResolver(timerFormSchema),
+    defaultValues: {
+      description: '',
+    },
+  });
+
+  // Timer effect - updates every 100ms for smooth UX
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
 
     if (isRunning) {
       interval = setInterval(() => {
-        setSeconds((s) => s + 1);
-      }, 1000);
+        setSeconds((s) => s + 0.1);
+      }, 100);
     }
 
     return () => {
@@ -29,98 +57,110 @@ export function TimerCard() {
 
   const handleStart = () => {
     setIsRunning(true);
-    setError('');
-    setSuccessMessage('');
   };
 
   const handleStop = () => {
     setIsRunning(false);
   };
 
-  const handleSave = async () => {
-    setError('');
-    setSuccessMessage('');
+  const onSubmit = async (values: TimerFormValues) => {
+    if (seconds === 0) {
+      toast.error('Please start the timer before saving');
+      return;
+    }
+
     setIsSaving(true);
 
     try {
-      const result = await saveTimeRecordAction(description, seconds);
+      const result = await saveTimeRecordAction(
+        values.description,
+        Math.round(seconds)
+      );
 
       if (result.success) {
-        setSuccessMessage('¡Registro guardado correctamente!');
-        setDescription('');
+        toast.success('Time record saved successfully!');
+        // Clear form and reset timer
+        form.reset();
         setSeconds(0);
         setIsRunning(false);
-
-        setTimeout(() => setSuccessMessage(''), 3000);
       } else {
-        setError(result.error);
+        toast.error(result.error);
       }
+    } catch (error) {
+      console.error('Error saving time record:', error);
+      toast.error('Failed to save time record. Please try again.');
     } finally {
       setIsSaving(false);
     }
   };
 
+  const canSave = seconds > 0 && !isSaving;
+
   return (
     <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
       <div className="text-center mb-8">
         <div className="text-6xl font-mono font-bold text-indigo-600 mb-4">
-          {formatDuration(seconds)}
+          {formatDuration(Math.round(seconds))}
         </div>
 
         <div className="flex justify-center gap-4 mb-6">
-          <button
+          <Button
+            type="button"
             onClick={handleStart}
             disabled={isRunning}
-            className="flex items-center gap-2 px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-2 bg-green-500 hover:bg-green-600 disabled:bg-gray-300"
+            size="lg"
           >
             <Play size={20} />
-            Iniciar
-          </button>
+            Start
+          </Button>
 
-          <button
+          <Button
+            type="button"
             onClick={handleStop}
             disabled={!isRunning}
-            className="flex items-center gap-2 px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+            variant="destructive"
+            className="flex items-center gap-2"
+            size="lg"
           >
             <Square size={20} />
-            Detener
-          </button>
+            Stop
+          </Button>
         </div>
       </div>
 
       <div className="border-t pt-6">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Descripción de la tarea:
-        </label>
-        <input
-          type="text"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Ej: Reunión con cliente, Desarrollo feature X..."
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent mb-4"
-          disabled={isSaving}
-        />
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Task Description</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="e.g., Client meeting, Feature development..."
+                      disabled={isSaving}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <button
-          onClick={handleSave}
-          disabled={seconds === 0 || !description.trim() || isSaving}
-          className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-        >
-          <Save size={20} />
-          {isSaving ? 'Guardando...' : 'Guardar Registro'}
-        </button>
-
-        {error && (
-          <div className="mt-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg">
-            {error}
-          </div>
-        )}
-
-        {successMessage && (
-          <div className="mt-4 p-3 bg-green-50 border border-green-200 text-green-700 rounded-lg">
-            {successMessage}
-          </div>
-        )}
+            <Button
+              type="submit"
+              disabled={!canSave}
+              className="w-full flex items-center justify-center gap-2"
+              size="lg"
+            >
+              <Save size={20} />
+              {isSaving ? 'Saving...' : 'Save Record'}
+            </Button>
+          </form>
+        </Form>
       </div>
     </div>
   );

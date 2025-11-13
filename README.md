@@ -167,20 +167,27 @@ export async function saveTimeRecordAction(
 
 ```typescript
 // infrastructure/persistence/in-memory-time-record.repository.ts
-export const createInMemoryRepository = (): TimeRecordRepository => {
+export const createInMemoryTimeRecordRepository = (): TimeRecordRepository => {
   // Implementation details...
 };
+
+// Singleton instance for simple learning project
+export const timeRecordRepository = createInMemoryTimeRecordRepository();
 ```
 
 ### 4. Presentation Layer (UI)
 
-Pure React components that call Server Actions:
+React Hook Form components with shadcn/ui:
 
 ```typescript
-// presentation/components/timer-page.tsx
-const handleSave = async () => {
-  const result = await saveTimeRecordAction(description, seconds);
-  // Handle result...
+// presentation/components/timer-card.tsx
+const form = useForm<TimerFormValues>({
+  resolver: zodResolver(timerFormSchema),
+});
+
+const onSubmit = async (values: TimerFormValues) => {
+  const result = await saveTimeRecordAction(values.description, seconds);
+  // Handle result with Sonner notifications...
 };
 ```
 
@@ -205,7 +212,9 @@ Presentation → Infrastructure (Primary) → Application → Domain ← Infrast
 
 - **Framework**: Next.js 16 (App Router)
 - **Language**: TypeScript
-- **Validation**: Zod
+- **Forms**: React Hook Form + Zod validation
+- **UI Components**: shadcn/ui
+- **Notifications**: Sonner
 - **Styling**: Tailwind CSS
 - **Icons**: Lucide React
 

@@ -124,7 +124,35 @@ export async function POST(request: Request) {
 }
 ```
 
-### 4. Type-Safe Error Handling
+### 4. Use React Hook Form + shadcn/ui
+
+**DO**:
+
+```typescript
+// React Hook Form with Zod validation
+const form = useForm<FormValues>({
+  resolver: zodResolver(formSchema),
+  defaultValues: { description: '' },
+});
+
+// shadcn/ui Form components
+<Form {...form}>
+  <FormField
+    name="description"
+    render={({ field }) => (
+      <FormItem>
+        <FormLabel>Description</FormLabel>
+        <FormControl>
+          <Input {...field} />
+        </FormControl>
+        <FormMessage />
+      </FormItem>
+    )}
+  />
+</Form>;
+```
+
+### 5. Type-Safe Error Handling
 
 **DO**:
 
@@ -219,29 +247,33 @@ Presentation uses → Infrastructure (Primary Adapters) only ✓
    ```typescript
    import { TimeRecordRepository } from '@/features/timer-tracking/application/ports/time-record.repository';
 
-   export const createPostgresRepository = (): TimeRecordRepository => {
-     return {
-       save: async (record) => {
-         // PostgreSQL implementation
-       },
-       findAll: async () => {
-         // PostgreSQL implementation
-       },
+   export const createPostgresTimeRecordRepository =
+     (): TimeRecordRepository => {
+       return {
+         save: async (record) => {
+           // PostgreSQL implementation
+         },
+         findAll: async () => {
+           // PostgreSQL implementation
+         },
+       };
      };
-   };
+
+   // New singleton instance
+   export const timeRecordRepository = createPostgresTimeRecordRepository();
    ```
 
-2. **Swap implementation**:
+2. **Update imports** in use cases:
 
    ```typescript
    // Before
-   const repository = createInMemoryRepository();
+   import { timeRecordRepository } from '../infrastructure/persistence/in-memory-time-record.repository';
 
    // After
-   const repository = createPostgresRepository();
+   import { timeRecordRepository } from '../infrastructure/persistence/postgres-time-record.repository';
    ```
 
-3. **No changes needed** in Domain, Application, or Presentation!
+3. **No changes needed** in Domain logic or business rules!
 
 ---
 
