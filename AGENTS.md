@@ -12,52 +12,57 @@ This is a **learning project** focused on demonstrating **Hexagonal Architecture
 
 ## Authentication Architecture
 
-This project uses **Supabase Middleware** for authentication instead of React Context providers.
+This project uses **Transparent Anonymous Authentication** via Supabase middleware.
 
 ### Key Points:
 
-- **No React Auth Providers**: Authentication handled via Next.js middleware
-- **Server Components**: Get user directly from Supabase server client
-- **No useEffect**: Authentication resolved server-side before render
-- **Type-safe**: User type from `@supabase/supabase-js`
+- **🔄 Completely Transparent**: Anonymous users created automatically on first visit
+- **🚀 Server-Side Only**: Authentication handled in Next.js middleware + use cases
+- **⚡ No User Interaction**: Users can immediately start tracking time
+- **🛡️ RLS Compliant**: Works seamlessly with Supabase Row Level Security
+- **🎯 Dual-Layer System**: Middleware + fallback user creation for reliability
 
 ### Implementation:
 
 ```typescript
-// middleware.ts - Handles session refresh
+// middleware.ts - Transparent user creation
 export async function middleware(request: NextRequest) {
   return await updateSession(request);
 }
 
-// app/page.tsx - Server component gets user
+// supabase-middleware.ts - Auto-creates anonymous users
+const {
+  data: { user },
+} = await supabase.auth.getUser();
+if (!user) {
+  await supabase.auth.signInAnonymously(); // Transparent creation
+}
+
+// app/page.tsx - Server component gets user (always present)
 export default async function HomePage() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  // user is always available due to middleware
   return <Header user={user} />;
 }
 
-// Header component - Receives user as prop
-type HeaderProps = { user: User | null };
-export function Header({ user }: HeaderProps) {
-  return (
-    <form action={user ? signOutAction : signInAction}>
-      <button type="submit">{user ? 'Sign Out' : 'Sign In Anonymously'}</button>
-    </form>
-  );
+// Use cases - Fallback user creation if needed
+if (!user) {
+  await supabase.auth.signInAnonymously(); // Backup creation
 }
 ```
 
 ### Files Structure:
 
-| File                                                           | Purpose                                   |
-| -------------------------------------------------------------- | ----------------------------------------- |
-| `middleware.ts`                                                | Next.js middleware for session management |
-| `src/shared/infrastructure/persistence/supabase-middleware.ts` | Session refresh logic                     |
-| `src/features/auth/infrastructure/http/auth.actions.ts`        | Server Actions for auth                   |
-| `src/features/auth/application/use-cases/`                     | Auth business logic                       |
-| `src/features/auth/domain/`                                    | Auth types and validation                 |
+| File                                                           | Purpose                                     |
+| -------------------------------------------------------------- | ------------------------------------------- |
+| `middleware.ts`                                                | Next.js middleware for session management   |
+| `src/shared/infrastructure/persistence/supabase-middleware.ts` | Session refresh + transparent user creation |
+| `src/features/auth/infrastructure/http/auth.actions.ts`        | Server Actions for auth                     |
+| `src/features/auth/application/use-cases/`                     | Auth business logic                         |
+| `src/features/auth/domain/`                                    | Auth types and validation                   |
 
 ---
 

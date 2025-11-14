@@ -2,7 +2,7 @@ import type { CreateTimeRecordInput } from '@/features/time-record/domain/time-r
 import { CreateTimeRecordSchema } from '@/features/time-record/domain/time-record.types';
 import { createTimeRecord } from '@/features/time-record/domain/time-record.factory';
 import { timeRecordRepository } from '@/features/time-record/infrastructure/persistence/repository.instance';
-import { ensureAnonymousUserUseCase } from '@/features/auth/application/use-cases/ensure-anonymous-user';
+import { createClient } from '@/shared/infrastructure/persistence/supabase-server';
 import { ZodError } from 'zod';
 
 export type Result<T> =
@@ -16,19 +16,44 @@ export const saveTimeRecordUseCase = async (
     // Validate with Zod
     CreateTimeRecordSchema.parse(input);
 
-    // Ensure user is authenticated (create anonymous user if needed)
-    const userResult = await ensureAnonymousUserUseCase();
-    if (!userResult.success) {
-      return {
-        success: false,
-        error: `Authentication failed: ${userResult.error}`,
-      };
+    // Get current user from server client (middleware handles auth)
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    // Backup: If middleware didn't create user, create one now
+    if (authError || !user) {
+      try {
+        const { data: newAuthData, error: createError } =
+          await supabase.auth.signInAnonymously();
+        if (createError || !newAuthData.user) {
+          return {
+            success: false,
+            error: 'Failed to create anonymous user for saving records.',
+          };
+        }
+        // Use the newly created user
+        const record = createTimeRecord({
+          ...input,
+          userId: newAuthData.user.id,
+        });
+        await timeRecordRepository.save(record);
+        return { success: true, data: undefined };
+      } catch (createError) {
+        console.error('Failed to create anonymous user:', createError);
+        return {
+          success: false,
+          error: 'Authentication failed. Please try again.',
+        };
+      }
     }
 
     // Create domain entity with user ID
     const record = createTimeRecord({
       ...input,
-      userId: userResult.data.id,
+      userId: user.id,
     });
 
     // Persist through repository

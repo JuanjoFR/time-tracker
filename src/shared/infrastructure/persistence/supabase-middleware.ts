@@ -5,7 +5,6 @@ export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
   });
-
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -33,9 +32,28 @@ export async function updateSession(request: NextRequest) {
   // supabase.auth.getUser(). A simple mistake could make it very hard to debug
   // issues with users being randomly logged out.
 
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  // IMPORTANT: You *must* return the supabaseResponse object as it is.
+  // Transparently create anonymous user if none exists
+  if (!user) {
+    try {
+      const { data: newUser, error: signInError } =
+        await supabase.auth.signInAnonymously();
+
+      // Force middleware to return response that includes the auth cookies
+      if (newUser?.user && !signInError) {
+        // The cookies are already set by the signInAnonymously call above
+        // We just need to ensure they're included in the response
+      }
+    } catch (createError) {
+      console.error(
+        'Failed to create anonymous user in middleware:',
+        createError
+      );
+    }
+  } // IMPORTANT: You *must* return the supabaseResponse object as it is.
   // If you're creating a new response object with NextResponse.next() make sure to:
   // 1. Pass the request in it, like so: NextResponse.next({ request })
   // 2. Copy over the cookies, like so: supabaseResponse.cookies.getAll().forEach(...)

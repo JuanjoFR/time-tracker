@@ -11,13 +11,13 @@ import { signOutUseCase } from '../../application/use-cases/sign-out';
  */
 
 export async function ensureAnonymousUserAction() {
-  return await ensureAnonymousUserUseCase();
+  const result = await ensureAnonymousUserUseCase();
+  return result;
 }
-
 export async function getCurrentUserAction() {
   return await getCurrentUserUseCase();
 }
 
 export async function signOutAction() {
-  return await signOutUseCase();
+  await signOutUseCase();
 }

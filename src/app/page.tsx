@@ -26,7 +26,7 @@ function RecordsListSkeleton() {
 
 // This is a Server Component by default in Next.js 15+
 export default async function HomePage() {
-  // Get current user from Supabase server client
+  // Get current user from Supabase server client (middleware should handle creation)
   const supabase = await createClient();
   const {
     data: { user },

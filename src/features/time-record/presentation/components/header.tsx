@@ -1,8 +1,5 @@
 import type { User } from '@supabase/supabase-js';
-import {
-  ensureAnonymousUserAction,
-  signOutAction,
-} from '@/features/auth/infrastructure/http/auth.actions';
+import { signOutAction } from '@/features/auth/infrastructure/http/auth.actions';
 
 type HeaderProps = {
   user: User | null;
@@ -34,19 +31,10 @@ export function Header({ user }: HeaderProps) {
             </form>
           </div>
         ) : (
-          <div className="text-amber-700">
-            <p className="text-sm mb-3">
-              ⚠️ No autenticado - Los registros se guardarán sin usuario
+          <div className="text-blue-700">
+            <p className="text-sm">
+              🔄 Creando usuario anónimo automáticamente...
             </p>
-
-            <form action={ensureAnonymousUserAction}>
-              <button
-                type="submit"
-                className="px-4 py-2 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
-              >
-                Iniciar Sesión Anónima
-              </button>
-            </form>
           </div>
         )}
       </div>

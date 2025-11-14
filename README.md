@@ -98,6 +98,7 @@ src/
 
 - Node.js 18+
 - npm/yarn/pnpm
+- Supabase account (for database)
 
 ### Installation
 
@@ -108,11 +109,24 @@ git clone <repository-url>
 # Install dependencies
 npm install
 
+# Set up environment variables
+cp .env.local.example .env.local
+# Add your Supabase URL and anon key
+
 # Run development server
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+### 🔐 Authentication
+
+**Transparent Anonymous Authentication**: Users are automatically signed in anonymously when they visit the app. No user interaction required - just start tracking time!
+
+- **Middleware-based**: Authentication handled in Next.js middleware
+- **Server-side**: No client-side auth state management
+- **Fallback system**: Dual-layer user creation for reliability
+- **RLS compliant**: Works seamlessly with Supabase Row Level Security
 
 ## 🧪 Key Concepts Demonstrated
 
@@ -233,11 +247,13 @@ Presentation → Infrastructure (Primary) → Application → Domain ← Infrast
 
 - [x] Replace InMemory repository with Supabase PostgreSQL
 - [x] Add anonymous authentication with RLS
-- [x] Implement middleware-based auth (no useEffect)
+- [x] Implement middleware-based auth (no React Context)
+- [x] Transparent anonymous user creation
 - [ ] Add editing/deleting records
 - [ ] Add categories/tags
 - [ ] Export data to CSV
 - [ ] Add unit tests
+- [ ] Add user registration/login
 
 ## 📚 Further Reading
 
