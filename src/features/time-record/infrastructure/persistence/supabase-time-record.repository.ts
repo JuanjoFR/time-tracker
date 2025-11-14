@@ -10,6 +10,7 @@ import { createClient } from '@/shared/infrastructure/persistence/supabase-serve
  * - description (string) <-> description
  * - durationInSeconds (number) <-> duration_in_seconds
  * - createdAt (Date) <-> created_at
+ * - userId (UUID string) <-> user_id
  */
 export const createSupabaseRepository = (): TimeRecordRepository => {
   return {
@@ -24,6 +25,7 @@ export const createSupabaseRepository = (): TimeRecordRepository => {
             description: record.description,
             duration_in_seconds: record.durationInSeconds,
             created_at: record.createdAt.toISOString(),
+            user_id: record.userId,
           })
           .select()
           .single();
@@ -39,6 +41,7 @@ export const createSupabaseRepository = (): TimeRecordRepository => {
           description: data.description,
           durationInSeconds: data.duration_in_seconds,
           createdAt: new Date(data.created_at),
+          userId: data.user_id,
         };
       } catch (error) {
         console.error('Repository save error:', error);
@@ -48,12 +51,13 @@ export const createSupabaseRepository = (): TimeRecordRepository => {
       }
     },
 
-    findAll: async (): Promise<TimeRecord[]> => {
+    findAllByUser: async (userId: string): Promise<TimeRecord[]> => {
       try {
         const supabase = await createClient();
 
-        // TODO: Consider adding pagination when dataset grows large
-        // For MVP, fetch all records sorted by creation date (most recent first)
+        // RLS will automatically filter by user_id based on auth.uid()
+        // userId parameter is kept for interface compliance and potential future use
+        // For MVP, fetch all user records sorted by creation date (most recent first)
         const { data, error } = await supabase
           .from('time_records')
           .select('*')
@@ -70,6 +74,7 @@ export const createSupabaseRepository = (): TimeRecordRepository => {
           description: row.description,
           durationInSeconds: row.duration_in_seconds,
           createdAt: new Date(row.created_at),
+          userId: row.user_id,
         }));
       } catch (error) {
         console.error('Repository findAll error:', error);

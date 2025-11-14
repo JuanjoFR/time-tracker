@@ -10,6 +10,7 @@ export const TimeRecordSchema = z.object({
   description: z.string(),
   durationInSeconds: z.number(),
   createdAt: z.date(),
+  userId: z.string().uuid('User ID must be a valid UUID'),
 });
 
 export type CreateTimeRecordInput = z.infer<typeof CreateTimeRecordSchema>;

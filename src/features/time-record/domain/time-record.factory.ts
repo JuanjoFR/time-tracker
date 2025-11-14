@@ -1,7 +1,9 @@
 import type { TimeRecord, CreateTimeRecordInput } from './time-record.types';
 import { CreateTimeRecordSchema } from './time-record.types';
 
-export const createTimeRecord = (input: CreateTimeRecordInput): TimeRecord => {
+export const createTimeRecord = (
+  input: CreateTimeRecordInput & { userId: string }
+): TimeRecord => {
   // Validate input with Zod
   const validated = CreateTimeRecordSchema.parse(input);
 
@@ -10,5 +12,6 @@ export const createTimeRecord = (input: CreateTimeRecordInput): TimeRecord => {
     description: validated.description,
     durationInSeconds: validated.durationInSeconds,
     createdAt: new Date(),
+    userId: input.userId,
   };
 };

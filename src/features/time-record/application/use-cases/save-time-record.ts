@@ -2,6 +2,7 @@ import type { CreateTimeRecordInput } from '@/features/time-record/domain/time-r
 import { CreateTimeRecordSchema } from '@/features/time-record/domain/time-record.types';
 import { createTimeRecord } from '@/features/time-record/domain/time-record.factory';
 import { timeRecordRepository } from '@/features/time-record/infrastructure/persistence/repository.instance';
+import { ensureAnonymousUserUseCase } from '@/features/auth/application/use-cases/ensure-anonymous-user';
 import { ZodError } from 'zod';
 
 export type Result<T> =
@@ -15,8 +16,20 @@ export const saveTimeRecordUseCase = async (
     // Validate with Zod
     CreateTimeRecordSchema.parse(input);
 
-    // Create domain entity
-    const record = createTimeRecord(input);
+    // Ensure user is authenticated (create anonymous user if needed)
+    const userResult = await ensureAnonymousUserUseCase();
+    if (!userResult.success) {
+      return {
+        success: false,
+        error: `Authentication failed: ${userResult.error}`,
+      };
+    }
+
+    // Create domain entity with user ID
+    const record = createTimeRecord({
+      ...input,
+      userId: userResult.data.id,
+    });
 
     // Persist through repository
     await timeRecordRepository.save(record);
