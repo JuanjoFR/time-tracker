@@ -16,13 +16,17 @@ export const createSupabaseAuthRepository = (): AuthRepository => {
   return {
     getCurrentUser: async (): Promise<AnonymousUser | null> => {
       try {
-        const supabase = await createClient();
+        const supabase = createClient();
         const {
           data: { user },
           error,
         } = await supabase.auth.getUser();
 
         if (error) {
+          // "Auth session missing!" is expected for new users - not an error
+          if (error.message.includes('Auth session missing')) {
+            return null;
+          }
           console.error('Error getting current user:', error.message);
           return null;
         }
@@ -45,7 +49,7 @@ export const createSupabaseAuthRepository = (): AuthRepository => {
 
     signInAnonymously: async (): Promise<AuthResult<AnonymousUser>> => {
       try {
-        const supabase = await createClient();
+        const supabase = createClient();
         const { data, error } = await supabase.auth.signInAnonymously();
 
         if (error) {
@@ -85,7 +89,7 @@ export const createSupabaseAuthRepository = (): AuthRepository => {
 
     signOut: async (): Promise<AuthResult<void>> => {
       try {
-        const supabase = await createClient();
+        const supabase = createClient();
         const { error } = await supabase.auth.signOut();
 
         if (error) {
@@ -111,7 +115,7 @@ export const createSupabaseAuthRepository = (): AuthRepository => {
 
     refreshSession: async (): Promise<AuthResult<AnonymousUser | null>> => {
       try {
-        const supabase = await createClient();
+        const supabase = createClient();
         const { data, error } = await supabase.auth.refreshSession();
 
         if (error) {

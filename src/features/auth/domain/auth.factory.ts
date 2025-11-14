@@ -14,7 +14,7 @@ export const createAnonymousUser = (supabaseUser: {
   const user = {
     id: supabaseUser.id,
     isAnonymous: supabaseUser.is_anonymous ?? true,
-    email: supabaseUser.email,
+    email: supabaseUser.email || undefined,
     createdAt: supabaseUser.created_at
       ? new Date(supabaseUser.created_at)
       : new Date(),

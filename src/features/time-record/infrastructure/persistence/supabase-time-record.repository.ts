@@ -51,6 +51,7 @@ export const createSupabaseRepository = (): TimeRecordRepository => {
       }
     },
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     findAllByUser: async (userId: string): Promise<TimeRecord[]> => {
       try {
         const supabase = await createClient();

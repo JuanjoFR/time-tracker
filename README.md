@@ -215,6 +215,8 @@ Presentation → Infrastructure (Primary) → Application → Domain ← Infrast
 
 - **Framework**: Next.js 16 (App Router)
 - **Language**: TypeScript
+- **Database**: Supabase (PostgreSQL)
+- **Authentication**: Supabase (Anonymous users)
 - **Validation**: Zod
 - **Styling**: Tailwind CSS
 - **Icons**: Lucide React
@@ -224,12 +226,14 @@ Presentation → Infrastructure (Primary) → Application → Domain ← Infrast
 - ⏱️ Start/Stop timer
 - 💾 Save time records with descriptions
 - 📋 View history of tracked time
+- 🔐 Anonymous authentication (Supabase)
 - ✅ Input validation with Zod
 
 ## 🔄 Next Steps (Future Enhancements)
 
 - [x] Replace InMemory repository with Supabase PostgreSQL
-- [ ] Add authentication
+- [x] Add anonymous authentication with RLS
+- [x] Implement middleware-based auth (no useEffect)
 - [ ] Add editing/deleting records
 - [ ] Add categories/tags
 - [ ] Export data to CSV

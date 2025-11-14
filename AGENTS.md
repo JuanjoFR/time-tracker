@@ -10,6 +10,57 @@ This is a **learning project** focused on demonstrating **Hexagonal Architecture
 
 ---
 
+## Authentication Architecture
+
+This project uses **Supabase Middleware** for authentication instead of React Context providers.
+
+### Key Points:
+
+- **No React Auth Providers**: Authentication handled via Next.js middleware
+- **Server Components**: Get user directly from Supabase server client
+- **No useEffect**: Authentication resolved server-side before render
+- **Type-safe**: User type from `@supabase/supabase-js`
+
+### Implementation:
+
+```typescript
+// middleware.ts - Handles session refresh
+export async function middleware(request: NextRequest) {
+  return await updateSession(request);
+}
+
+// app/page.tsx - Server component gets user
+export default async function HomePage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return <Header user={user} />;
+}
+
+// Header component - Receives user as prop
+type HeaderProps = { user: User | null };
+export function Header({ user }: HeaderProps) {
+  return (
+    <form action={user ? signOutAction : signInAction}>
+      <button type="submit">{user ? 'Sign Out' : 'Sign In Anonymously'}</button>
+    </form>
+  );
+}
+```
+
+### Files Structure:
+
+| File                                                           | Purpose                                   |
+| -------------------------------------------------------------- | ----------------------------------------- |
+| `middleware.ts`                                                | Next.js middleware for session management |
+| `src/shared/infrastructure/persistence/supabase-middleware.ts` | Session refresh logic                     |
+| `src/features/auth/infrastructure/http/auth.actions.ts`        | Server Actions for auth                   |
+| `src/features/auth/application/use-cases/`                     | Auth business logic                       |
+| `src/features/auth/domain/`                                    | Auth types and validation                 |
+
+---
+
 ## Architecture Rules (CRITICAL)
 
 ### Layer Dependencies

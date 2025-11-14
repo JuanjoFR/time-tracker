@@ -4,7 +4,7 @@ import { z } from 'zod';
 export const AnonymousUserSchema = z.object({
   id: z.string().uuid(),
   isAnonymous: z.boolean(),
-  email: z.string().email().optional(),
+  email: z.string().optional(),
   createdAt: z.date(),
 });
 

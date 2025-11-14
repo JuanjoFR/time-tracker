@@ -4,6 +4,7 @@ import { TimerCard } from '@/features/time-record/presentation/components/timer-
 import { RecordsList } from '@/features/time-record/presentation/components/records-list';
 import { ArchitectureInfo } from '@/features/time-record/presentation/components/architecture-info';
 import { getAllTimeRecordsAction } from '@/features/time-record/infrastructure/http/time-record.actions';
+import { createClient } from '@/shared/infrastructure/persistence/supabase-server';
 
 function RecordsListSkeleton() {
   return (
@@ -25,6 +26,12 @@ function RecordsListSkeleton() {
 
 // This is a Server Component by default in Next.js 15+
 export default async function HomePage() {
+  // Get current user from Supabase server client
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   // Create the promise for records (don't await here)
   const recordsPromise = getAllTimeRecordsAction().then((result) =>
     result.success ? result.data : []
@@ -33,7 +40,7 @@ export default async function HomePage() {
   return (
     <div className="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100 p-8">
       <div className="max-w-4xl mx-auto">
-        <Header />
+        <Header user={user} />
 
         <TimerCard />
 
