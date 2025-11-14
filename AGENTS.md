@@ -157,6 +157,18 @@ export const myUseCase = async (): Promise<Result<Data>> => {
 };
 ```
 
+### 5. UI/UX Guidelines
+
+**Follow [Vercel Design Guidelines](https://vercel.com/design/guidelines)** for:
+
+- Component design patterns
+- Color schemes and typography
+- Spacing and layout consistency
+- Interactive states and animations
+- Accessibility standards
+
+When creating presentation components, reference these guidelines to maintain professional, consistent user interfaces.
+
 ---
 
 ## When Adding New Code
@@ -504,6 +516,7 @@ When asking for code modifications:
 - See `ARCHITECTURE.md` for detailed architecture documentation
 - See `README.md` for project overview
 - Check existing code in `src/features/timer-tracking/` as examples
+- **UI Guidelines**: [Vercel Design Guidelines](https://vercel.com/design/guidelines)
 
 ---
 
