@@ -26,7 +26,7 @@ export function ArchitectureInfo() {
         <div className="p-3 bg-yellow-50 rounded-lg">
           <strong className="text-yellow-700">Infrastructure:</strong>
           <p className="text-gray-600 font-mono text-xs mt-1">
-            createInMemoryRepository() (adaptador)
+            createSupabaseRepository() (adaptador)
           </p>
         </div>
         <div className="p-3 bg-orange-50 rounded-lg">

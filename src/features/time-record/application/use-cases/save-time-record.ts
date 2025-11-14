@@ -1,7 +1,7 @@
-import type { CreateTimeRecordInput } from '@/features/timer-tracking/domain/time-record.types';
-import { CreateTimeRecordSchema } from '@/features/timer-tracking/domain/time-record.types';
-import { createTimeRecord } from '@/features/timer-tracking/domain/time-record.factory';
-import { timeRecordRepository } from '@/features/timer-tracking/infrastructure/persistence/repository.instance';
+import type { CreateTimeRecordInput } from '@/features/time-record/domain/time-record.types';
+import { CreateTimeRecordSchema } from '@/features/time-record/domain/time-record.types';
+import { createTimeRecord } from '@/features/time-record/domain/time-record.factory';
+import { timeRecordRepository } from '@/features/time-record/infrastructure/persistence/repository.instance';
 import { ZodError } from 'zod';
 
 export type Result<T> =

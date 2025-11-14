@@ -240,38 +240,27 @@ Presentation uses → Infrastructure (Primary Adapters) only ✓
 
 ---
 
-### Task: Change storage from InMemory to PostgreSQL
+### Task: Swap Database Implementation
 
-1. **Create new adapter** (`infrastructure/persistence/postgres-time-record.repository.ts`):
+To change from Supabase to a different database:
 
-   ```typescript
-   import { TimeRecordRepository } from '@/features/timer-tracking/application/ports/time-record.repository';
+```typescript
+// infrastructure/persistence/repository.instance.ts
 
-   export const createPostgresRepository = (): TimeRecordRepository => {
-     return {
-       save: async (record) => {
-         // PostgreSQL implementation
-       },
-       findAll: async () => {
-         // PostgreSQL implementation
-       },
-     };
-   };
-   ```
+// Before (Supabase)
+import { createSupabaseRepository } from './supabase-time-record.repository';
+export const timeRecordRepository = createSupabaseRepository();
 
-2. **Update DI Container** (`infrastructure/persistence/repository.instance.ts`):
+// After (Different Database) - Change in ONE file only!
+import { createPostgresRepository } from './postgres-time-record.repository';
+export const timeRecordRepository = createPostgresRepository();
+```
 
-   ```typescript
-   // Before
-   import { createInMemoryRepository } from './in-memory-time-record.repository';
-   export const timeRecordRepository = createInMemoryRepository();
+**Benefits of hexagonal architecture**:
 
-   // After - Change in ONE file only!
-   import { createPostgresRepository } from './postgres-time-record.repository';
-   export const timeRecordRepository = createPostgresRepository();
-   ```
-
-3. **No changes needed** in Domain, Application, or Presentation!
+- ✅ Zero changes needed in Domain, Application, or Presentation layers
+- ✅ Environment switching (dev/prod) handled by configuration only
+- ✅ Clean separation between business logic and technical implementation
 
 ---
 
@@ -299,12 +288,12 @@ Presentation uses → Infrastructure (Primary Adapters) only ✓
 3. **Implement in adapter** (`infrastructure/persistence/...`):
 
    ```typescript
-   // in-memory-time-record.repository.ts
-   export const createInMemoryRepository = (): TimeRecordRepository => {
-     const records: TimeRecord[] = [];
+   // supabase-time-record.repository.ts
+   export const createSupabaseRepository = (): TimeRecordRepository => {
      return {
        delete: async (id) => {
-         // Implementation
+         const supabase = await createClient();
+         await supabase.from('time_records').delete().eq('id', id);
        },
      };
    };
@@ -314,7 +303,7 @@ Presentation uses → Infrastructure (Primary Adapters) only ✓
 
    ```typescript
    // Re-export updated instance
-   export const timeRecordRepository = createInMemoryRepository();
+   export const timeRecordRepository = createSupabaseRepository();
    ```
 
 5. **Create Server Action** (`infrastructure/http/time-record.actions.ts`):
@@ -496,7 +485,7 @@ When asking for code modifications:
 
 - "Add a new field `category` to TimeRecord, following hexagonal architecture"
 - "Create a new use case to delete time records"
-- "Swap InMemoryRepository with a PostgreSQL implementation"
+- "Add environment-based configuration for Supabase local vs production"
 
 **Bad prompts**:
 
@@ -515,7 +504,7 @@ When asking for code modifications:
 
 - See `ARCHITECTURE.md` for detailed architecture documentation
 - See `README.md` for project overview
-- Check existing code in `src/features/timer-tracking/` as examples
+- Check existing code in `src/features/time-record/` as examples
 - **UI Guidelines**: [Vercel Design Guidelines](https://vercel.com/design/guidelines)
 
 ---

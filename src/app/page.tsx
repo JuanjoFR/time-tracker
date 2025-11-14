@@ -1,9 +1,9 @@
 import { Suspense } from 'react';
-import { Header } from '@/features/timer-tracking/presentation/components/header';
-import { TimerCard } from '@/features/timer-tracking/presentation/components/timer-card';
-import { RecordsList } from '@/features/timer-tracking/presentation/components/records-list';
-import { ArchitectureInfo } from '@/features/timer-tracking/presentation/components/architecture-info';
-import { getAllTimeRecordsAction } from '@/features/timer-tracking/infrastructure/http/time-record.actions';
+import { Header } from '@/features/time-record/presentation/components/header';
+import { TimerCard } from '@/features/time-record/presentation/components/timer-card';
+import { RecordsList } from '@/features/time-record/presentation/components/records-list';
+import { ArchitectureInfo } from '@/features/time-record/presentation/components/architecture-info';
+import { getAllTimeRecordsAction } from '@/features/time-record/infrastructure/http/time-record.actions';
 
 function RecordsListSkeleton() {
   return (

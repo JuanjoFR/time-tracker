@@ -1,11 +1,11 @@
 'use client';
 
 import { use } from 'react';
-import type { TimeRecord } from '@/features/timer-tracking/domain/time-record.types';
+import type { TimeRecord } from '@/features/time-record/domain/time-record.types';
 import {
   formatDuration,
   formatDate,
-} from '@/features/timer-tracking/domain/time-record.utils';
+} from '@/features/time-record/domain/time-record.utils';
 
 type RecordsListProps = {
   recordsPromise: Promise<TimeRecord[]>;

@@ -6,8 +6,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Play, Square, Save } from 'lucide-react';
 import { toast } from 'sonner';
-import { saveTimeRecordAction } from '@/features/timer-tracking/infrastructure/http/time-record.actions';
-import { formatDuration } from '@/features/timer-tracking/domain/time-record.utils';
+import { saveTimeRecordAction } from '@/features/time-record/infrastructure/http/time-record.actions';
+import { formatDuration } from '@/features/time-record/domain/time-record.utils';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import {

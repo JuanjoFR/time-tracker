@@ -1,6 +1,6 @@
-// src/features/timer-tracking/infrastructure/persistence/repository.instance.ts
+// src/features/time-record/infrastructure/persistence/repository.instance.ts
 
-import { createInMemoryRepository } from './in-memory-time-record.repository';
+import { createSupabaseRepository } from './supabase-time-record.repository';
 
 /**
  * Dependency Injection Container
@@ -12,13 +12,13 @@ import { createInMemoryRepository } from './in-memory-time-record.repository';
 
 // Create singleton instance
 // This is the ONLY place where we instantiate the repository
-export const timeRecordRepository = createInMemoryRepository();
+export const timeRecordRepository = createSupabaseRepository();
 
 /**
- * To swap implementations (e.g., from InMemory to PostgreSQL):
+ * To swap implementations (e.g., from Supabase to different database):
  *
  * import { createPostgresRepository } from './postgres-time-record.repository';
  * export const timeRecordRepository = createPostgresRepository();
  *
- * Use cases don't need to change!
+ * Use cases don't need to change - that's the power of hexagonal architecture!
  */

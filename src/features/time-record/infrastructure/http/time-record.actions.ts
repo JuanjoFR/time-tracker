@@ -1,8 +1,8 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { saveTimeRecordUseCase } from '@/features/timer-tracking/application/use-cases/save-time-record';
-import { getAllTimeRecordsUseCase } from '@/features/timer-tracking/application/use-cases/get-all-time-records';
+import { saveTimeRecordUseCase } from '@/features/time-record/application/use-cases/save-time-record';
+import { getAllTimeRecordsUseCase } from '@/features/time-record/application/use-cases/get-all-time-records';
 
 export async function saveTimeRecordAction(
   description: string,

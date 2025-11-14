@@ -52,7 +52,7 @@ This is an **educational project** designed to learn and understand:
 Each feature is self-contained with all its layers:
 
 ```
-src/features/timer-tracking/
+src/features/time-record/
 ├── domain/              # Business logic
 ├── application/         # Use cases & ports
 ├── infrastructure/      # Adapters (HTTP, DB)
@@ -64,7 +64,7 @@ src/features/timer-tracking/
 ```
 src/
 ├── features/
-│   └── timer-tracking/
+│   └── time-record/
 │       ├── domain/
 │       │   ├── time-record.types.ts      # Types & Zod schemas
 │       │   ├── time-record.factory.ts    # Factory functions
@@ -81,7 +81,7 @@ src/
 │       │   ├── http/
 │       │   │   └── time-record.actions.ts     # Server Actions
 │       │   └── persistence/
-│       │       ├── in-memory-time-record.repository.ts
+│       │       ├── supabase-time-record.repository.ts
 │       │       └── repository.instance.ts     # DI Container
 │       │
 │       └── presentation/
@@ -167,19 +167,19 @@ export async function saveTimeRecordAction(
 **Secondary Adapters** (Output - Repository):
 
 ```typescript
-// infrastructure/persistence/in-memory-time-record.repository.ts
-export const createInMemoryRepository = (): TimeRecordRepository => {
-  const records: TimeRecord[] = [];
+// infrastructure/persistence/supabase-time-record.repository.ts
+export const createSupabaseRepository = (): TimeRecordRepository => {
   return {
     save: async (record) => {
-      records.push(record);
-      return record;
+      const supabase = await createClient();
+      const { data } = await supabase.from('time_records').insert(record);
+      return data;
     },
   };
 };
 
 // infrastructure/persistence/repository.instance.ts (DI Container)
-export const timeRecordRepository = createInMemoryRepository();
+export const timeRecordRepository = createSupabaseRepository();
 ```
 
 ### 4. Presentation Layer (UI)
@@ -208,7 +208,7 @@ Presentation → Infrastructure (Primary) → Application → Domain ← Infrast
 
 - ✅ **Testable**: Each layer can be tested independently
 - ✅ **Maintainable**: Clear separation of concerns
-- ✅ **Flexible**: Easy to swap implementations (e.g., change from InMemory to SQL)
+- ✅ **Flexible**: Easy to swap implementations (e.g., change from Supabase to other databases)
 - ✅ **Scalable**: Add features without affecting existing code
 
 ## 🛠️ Tech Stack
@@ -228,7 +228,7 @@ Presentation → Infrastructure (Primary) → Application → Domain ← Infrast
 
 ## 🔄 Next Steps (Future Enhancements)
 
-- [ ] Replace InMemory repository with SQLite/PostgreSQL
+- [x] Replace InMemory repository with Supabase PostgreSQL
 - [ ] Add authentication
 - [ ] Add editing/deleting records
 - [ ] Add categories/tags

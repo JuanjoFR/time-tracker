@@ -52,7 +52,7 @@ Instead of organizing code by technical layers (controllers, services, repositor
 
 ```
 features/
-├── timer-tracking/        ← Complete feature
+├── time-record/        ← Complete feature
 │   ├── domain/
 │   ├── application/
 │   ├── infrastructure/
@@ -197,16 +197,26 @@ export async function saveTimeRecordAction(
 Implement ports defined by the application layer.
 
 ```typescript
-// infrastructure/persistence/in-memory-time-record.repository.ts
-export const createInMemoryRepository = (): TimeRecordRepository => {
-  const records: TimeRecord[] = [];
-
+// infrastructure/persistence/supabase-time-record.repository.ts
+export const createSupabaseRepository = (): TimeRecordRepository => {
   return {
     save: async (record) => {
-      records.push(record);
-      return record;
+      const supabase = await createClient();
+      const { data } = await supabase
+        .from('time_records')
+        .insert(record)
+        .select()
+        .single();
+      return data;
     },
-    findAll: async () => [...records],
+    findAll: async () => {
+      const supabase = await createClient();
+      const { data } = await supabase
+        .from('time_records')
+        .select('*')
+        .order('created_at', { ascending: false });
+      return data || [];
+    },
   };
 };
 ```
@@ -286,10 +296,13 @@ export type TimeRecordRepository = {
 };
 
 // Infrastructure implements it
-export const createPostgresRepository = (): TimeRecordRepository => {
+export const createSupabaseRepository = (): TimeRecordRepository => {
   return {
     save: async (record) => {
-      // PostgreSQL implementation
+      // Supabase PostgreSQL implementation
+      const supabase = await createClient();
+      const { data } = await supabase.from('time_records').insert(record);
+      return data;
     },
   };
 };
@@ -354,11 +367,12 @@ export const createTimeRecord = (input: CreateTimeRecordInput): TimeRecord => {
 };
 
 // 6. REPOSITORY IMPLEMENTATION (Infrastructure - Secondary)
-export const createInMemoryRepository = (): TimeRecordRepository => {
+export const createSupabaseRepository = (): TimeRecordRepository => {
   return {
     save: async (record) => {
-      records.push(record);
-      return record;
+      const supabase = await createClient();
+      const { data } = await supabase.from('time_records').insert(record);
+      return data;
     },
   };
 };
@@ -447,7 +461,7 @@ Component → Server Action → Use Case
 
 ### Why InMemory Repository?
 
-For learning purposes, we start with in-memory storage:
+For learning purposes, we use Supabase PostgreSQL with local development:
 
 **Benefits**:
 
@@ -517,11 +531,11 @@ describe('InMemoryRepository', () => {
 ### Swapping Repository Implementation
 
 ```typescript
-// Before (InMemory)
-import { createInMemoryRepository } from './infrastructure/persistence/in-memory-time-record.repository';
+// Before (Supabase)
+import { createSupabaseRepository } from './infrastructure/persistence/supabase-time-record.repository';
 
-// After (PostgreSQL)
-import { createPostgresRepository } from './infrastructure/persistence/postgres-time-record.repository';
+// After (Different Database)
+import { createMongoRepository } from './infrastructure/persistence/mongo-time-record.repository';
 
 // Use case doesn't change!
 export const saveTimeRecordUseCase = async (input: CreateTimeRecordInput) => {
