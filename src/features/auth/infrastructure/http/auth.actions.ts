@@ -2,7 +2,6 @@
 
 import { ensureAnonymousUserUseCase } from '../../application/use-cases/ensure-anonymous-user';
 import { getCurrentUserUseCase } from '../../application/use-cases/get-current-user';
-import { signOutUseCase } from '../../application/use-cases/sign-out';
 
 /**
  * Auth Server Actions
@@ -14,10 +13,10 @@ export async function ensureAnonymousUserAction() {
   const result = await ensureAnonymousUserUseCase();
   return result;
 }
+
 export async function getCurrentUserAction() {
   return await getCurrentUserUseCase();
 }
 
-export async function signOutAction() {
-  await signOutUseCase();
-}
+// Note: Sign out is handled client-side in presentation/components/sign-out-button.tsx
+// This follows Supabase SSR best practices - browser client properly clears cookies

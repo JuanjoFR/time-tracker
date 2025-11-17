@@ -1,5 +1,5 @@
 import type { User } from '@supabase/supabase-js';
-import { signOutAction } from '@/features/auth/infrastructure/http/auth.actions';
+import { SignOutButton } from '@/features/auth/presentation/components/sign-out-button';
 
 type HeaderProps = {
   user: User | null;
@@ -21,14 +21,7 @@ export function Header({ user }: HeaderProps) {
             <p className="font-medium">{user.email || 'Usuario anónimo'}</p>
             <p className="text-xs text-gray-500 mb-3">ID: {user.id}</p>
 
-            <form action={signOutAction}>
-              <button
-                type="submit"
-                className="px-4 py-2 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
-              >
-                Cerrar Sesión
-              </button>
-            </form>
+            <SignOutButton />
           </div>
         ) : (
           <div className="text-blue-700">
