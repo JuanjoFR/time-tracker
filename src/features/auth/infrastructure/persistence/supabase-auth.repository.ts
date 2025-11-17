@@ -1,11 +1,11 @@
 import { AuthRepository } from '../../application/ports/auth.repository';
 import {
-  AnonymousUser,
+  User,
   AuthResult,
   AuthError,
   AuthErrorMessages,
 } from '../../domain/auth.types';
-import { createAnonymousUser } from '../../domain/auth.factory';
+import { createUser } from '../../domain/auth.factory';
 import { createClient } from '@/shared/infrastructure/persistence/supabase-client';
 
 /**
@@ -14,7 +14,7 @@ import { createClient } from '@/shared/infrastructure/persistence/supabase-clien
  */
 export const createSupabaseAuthRepository = (): AuthRepository => {
   return {
-    getCurrentUser: async (): Promise<AnonymousUser | null> => {
+    getCurrentUser: async (): Promise<User | null> => {
       try {
         const supabase = createClient();
         const {
@@ -35,7 +35,7 @@ export const createSupabaseAuthRepository = (): AuthRepository => {
           return null;
         }
 
-        return createAnonymousUser({
+        return createUser({
           id: user.id,
           email: user.email,
           is_anonymous: user.is_anonymous,
@@ -47,7 +47,7 @@ export const createSupabaseAuthRepository = (): AuthRepository => {
       }
     },
 
-    signInAnonymously: async (): Promise<AuthResult<AnonymousUser>> => {
+    signInAnonymously: async (): Promise<AuthResult<User>> => {
       try {
         const supabase = createClient();
         const { data, error } = await supabase.auth.signInAnonymously();
@@ -67,7 +67,7 @@ export const createSupabaseAuthRepository = (): AuthRepository => {
           };
         }
 
-        const anonymousUser = createAnonymousUser({
+        const user = createUser({
           id: data.user.id,
           email: data.user.email,
           is_anonymous: data.user.is_anonymous,
@@ -76,7 +76,7 @@ export const createSupabaseAuthRepository = (): AuthRepository => {
 
         return {
           success: true,
-          data: anonymousUser,
+          data: user,
         };
       } catch (error) {
         console.error('Unexpected error signing in anonymously:', error);
@@ -113,7 +113,7 @@ export const createSupabaseAuthRepository = (): AuthRepository => {
       }
     },
 
-    refreshSession: async (): Promise<AuthResult<AnonymousUser | null>> => {
+    refreshSession: async (): Promise<AuthResult<User | null>> => {
       try {
         const supabase = createClient();
         const { data, error } = await supabase.auth.refreshSession();
@@ -133,7 +133,7 @@ export const createSupabaseAuthRepository = (): AuthRepository => {
           };
         }
 
-        const anonymousUser = createAnonymousUser({
+        const user = createUser({
           id: data.user.id,
           email: data.user.email,
           is_anonymous: data.user.is_anonymous,
@@ -142,7 +142,7 @@ export const createSupabaseAuthRepository = (): AuthRepository => {
 
         return {
           success: true,
-          data: anonymousUser,
+          data: user,
         };
       } catch (error) {
         console.error('Unexpected error refreshing session:', error);

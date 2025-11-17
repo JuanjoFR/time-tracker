@@ -1,4 +1,4 @@
-import { AnonymousUser, AuthResult } from '../../domain/auth.types';
+import { User, AuthResult } from '../../domain/auth.types';
 import { authRepository } from '../../infrastructure/persistence/repository.instance';
 
 /**
@@ -7,7 +7,7 @@ import { authRepository } from '../../infrastructure/persistence/repository.inst
  * If no user exists, creates an anonymous user automatically
  */
 export const ensureAnonymousUserUseCase = async (): Promise<
-  AuthResult<AnonymousUser>
+  AuthResult<User>
 > => {
   try {
     // First, try to get the current user

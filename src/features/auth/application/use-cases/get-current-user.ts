@@ -1,4 +1,4 @@
-import { AnonymousUser, AuthResult } from '../../domain/auth.types';
+import { User, AuthResult } from '../../domain/auth.types';
 import { authRepository } from '../../infrastructure/persistence/repository.instance';
 
 /**
@@ -7,7 +7,7 @@ import { authRepository } from '../../infrastructure/persistence/repository.inst
  * Returns null if no user is authenticated
  */
 export const getCurrentUserUseCase = async (): Promise<
-  AuthResult<AnonymousUser | null>
+  AuthResult<User | null>
 > => {
   try {
     const currentUser = await authRepository.getCurrentUser();

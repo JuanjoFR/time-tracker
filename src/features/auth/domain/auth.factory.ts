@@ -1,16 +1,16 @@
-import { AnonymousUser, AnonymousUserSchema } from './auth.types';
+import { User, UserSchema } from './auth.types';
 
 /**
- * Factory function to create an AnonymousUser from Supabase auth data
+ * Factory function to create a User from Supabase auth data
  * @param supabaseUser - Raw user data from Supabase
- * @returns Validated AnonymousUser domain object
+ * @returns Validated User domain object
  */
-export const createAnonymousUser = (supabaseUser: {
+export const createUser = (supabaseUser: {
   id: string;
   email?: string;
   is_anonymous?: boolean;
   created_at?: string;
-}): AnonymousUser => {
+}): User => {
   const user = {
     id: supabaseUser.id,
     isAnonymous: supabaseUser.is_anonymous ?? true,
@@ -20,25 +20,25 @@ export const createAnonymousUser = (supabaseUser: {
       : new Date(),
   };
 
-  return AnonymousUserSchema.parse(user);
+  return UserSchema.parse(user);
 };
 
 /**
  * Check if a user is anonymous based on domain rules
- * @param user - AnonymousUser domain object
+ * @param user - User domain object
  * @returns Boolean indicating if user is anonymous
  */
-export const isAnonymousUser = (user: AnonymousUser): boolean => {
+export const isAnonymousUser = (user: User): boolean => {
   return user.isAnonymous;
 };
 
 /**
  * Check if a user session is valid (not expired based on creation date)
  * This is a simple check - actual session validation happens in infrastructure
- * @param user - AnonymousUser domain object
+ * @param user - User domain object
  * @returns Boolean indicating if user session is likely valid
  */
-export const isUserSessionValid = (user: AnonymousUser): boolean => {
+export const isUserSessionValid = (user: User): boolean => {
   const now = new Date();
   const sessionAge = now.getTime() - user.createdAt.getTime();
   const maxSessionAge = 60 * 60 * 1000; // 1 hour in milliseconds

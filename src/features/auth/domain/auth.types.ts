@@ -1,14 +1,14 @@
 import { z } from 'zod';
 
 // Domain Types for Authentication
-export const AnonymousUserSchema = z.object({
+export const UserSchema = z.object({
   id: z.string().uuid(),
   isAnonymous: z.boolean(),
   email: z.string().optional(),
   createdAt: z.date(),
 });
 
-export type AnonymousUser = z.infer<typeof AnonymousUserSchema>;
+export type User = z.infer<typeof UserSchema>;
 
 // Input types for use cases
 export const SignInAnonymouslyInputSchema = z.object({

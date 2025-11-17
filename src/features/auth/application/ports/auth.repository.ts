@@ -1,4 +1,4 @@
-import { AnonymousUser, AuthResult } from '../../domain/auth.types';
+import { User, AuthResult } from '../../domain/auth.types';
 
 /**
  * Auth Repository Port (Interface)
@@ -10,13 +10,13 @@ export interface AuthRepository {
    * Get the currently authenticated user
    * @returns Promise resolving to the current user or null if not authenticated
    */
-  getCurrentUser(): Promise<AnonymousUser | null>;
+  getCurrentUser(): Promise<User | null>;
 
   /**
    * Sign in anonymously and create a temporary user
    * @returns Promise resolving to auth result with user data
    */
-  signInAnonymously(): Promise<AuthResult<AnonymousUser>>;
+  signInAnonymously(): Promise<AuthResult<User>>;
 
   /**
    * Sign out the current user and terminate session
@@ -28,5 +28,5 @@ export interface AuthRepository {
    * Refresh the current session if needed
    * @returns Promise resolving to auth result with refreshed user data
    */
-  refreshSession(): Promise<AuthResult<AnonymousUser | null>>;
+  refreshSession(): Promise<AuthResult<User | null>>;
 }
