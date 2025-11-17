@@ -1,20 +1,19 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { createBrowserClient } from '@supabase/ssr';
+import { createClient } from '@/shared/infrastructure/persistence/supabase-client';
 
 /**
  * SignOutButton - Client Component
  * Handles user sign-out using browser client to properly clear cookies
+ * Uses shared infrastructure layer for Supabase client creation
  */
 export function SignOutButton() {
   const router = useRouter();
 
   const handleSignOut = async () => {
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
+    // Use shared browser client from infrastructure layer
+    const supabase = createClient();
 
     // Sign out using browser client - properly clears cookies
     await supabase.auth.signOut();

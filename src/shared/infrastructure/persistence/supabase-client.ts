@@ -9,7 +9,14 @@ export function createClient() {
     {
       cookies: {
         getAll() {
-          return [];
+          // Read all cookies from document.cookie
+          if (typeof document === 'undefined') return [];
+
+          return document.cookie.split(';').map((cookie) => {
+            const [name, ...valueParts] = cookie.trim().split('=');
+            const value = valueParts.join('=');
+            return { name, value };
+          });
         },
         setAll(cookiesToSet) {
           try {
