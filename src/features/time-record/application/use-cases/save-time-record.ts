@@ -23,31 +23,12 @@ export const saveTimeRecordUseCase = async (
       error: authError,
     } = await supabase.auth.getUser();
 
-    // Backup: If middleware didn't create user, create one now
+    // If no user exists, something is wrong with middleware
     if (authError || !user) {
-      try {
-        const { data: newAuthData, error: createError } =
-          await supabase.auth.signInAnonymously();
-        if (createError || !newAuthData.user) {
-          return {
-            success: false,
-            error: 'Failed to create anonymous user for saving records.',
-          };
-        }
-        // Use the newly created user
-        const record = createTimeRecord({
-          ...input,
-          userId: newAuthData.user.id,
-        });
-        await timeRecordRepository.save(record);
-        return { success: true, data: undefined };
-      } catch (createError) {
-        console.error('Failed to create anonymous user:', createError);
-        return {
-          success: false,
-          error: 'Authentication failed. Please try again.',
-        };
-      }
+      return {
+        success: false,
+        error: 'No authenticated user found. Please refresh the page.',
+      };
     }
 
     // Create domain entity with user ID
