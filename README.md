@@ -2,6 +2,21 @@
 
 A simple time tracking application built with Next.js 16, demonstrating **Hexagonal Architecture** (Ports & Adapters) combined with **Vertical Slice Architecture**.
 
+## 📸 Screenshot & Demo
+
+### Screenshot
+
+![Time Tracker App Screenshot](./docs/images/app-screenshot.png)
+
+### Video Walkthrough
+
+https://github.com/user-attachments/assets/your-video-filename.mp4
+
+> **Note**: Upload your demo files to the repository:
+>
+> - Screenshot: `/docs/images/app-screenshot.png`
+> - Video: Upload via GitHub's web interface and replace the URL above
+
 ## 🎯 Project Purpose
 
 This is an **educational project** designed to learn and understand:
