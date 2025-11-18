@@ -6,16 +6,11 @@ A simple time tracking application built with Next.js 16, demonstrating **Hexago
 
 ### Screenshot
 
-![Time Tracker App Screenshot](./docs/images/app-screenshot.png)
+<img width="1440" height="900" alt="time-tracker" src="https://github.com/user-attachments/assets/6cbad407-aba6-4c1c-ad06-2ba88ae6dc98" />
 
 ### Video Walkthrough
 
-https://github.com/user-attachments/assets/your-video-filename.mp4
-
-> **Note**: Upload your demo files to the repository:
->
-> - Screenshot: `/docs/images/app-screenshot.png`
-> - Video: Upload via GitHub's web interface and replace the URL above
+https://github.com/user-attachments/assets/0ea00fda-f4f5-46af-9ab9-e4d6d26342fe
 
 ## 🎯 Project Purpose
 
