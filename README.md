@@ -337,20 +337,6 @@ App Router Page → Presentation Components → Server Actions (Infrastructure P
 - 🔐 Anonymous authentication (Supabase)
 - ✅ Input validation with Zod
 
-## 🔄 Next Steps (Future Enhancements)
-
-- [x] Replace InMemory repository with Supabase PostgreSQL
-- [x] Add anonymous authentication with RLS
-- [x] Implement middleware-based auth (no React Context)
-- [x] Transparent anonymous user creation
-- [x] Add DI Container pattern for repository instances
-- [ ] Add editing/deleting records
-- [ ] Add categories/tags
-- [ ] Export data to CSV
-- [ ] Add unit tests
-- [ ] Add integration tests
-- [ ] Add user registration/login (upgrade from anonymous)
-
 ## 📚 Further Reading
 
 - [Hexagonal Architecture (Alistair Cockburn)](https://alistair.cockburn.us/hexagonal-architecture/)
