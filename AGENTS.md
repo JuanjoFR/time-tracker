@@ -45,7 +45,7 @@ export default async function HomePage() {
     data: { user },
   } = await supabase.auth.getUser();
   // user is always available due to middleware
-  return <Header user={user} />;
+  return <Timer user={user} />;
 }
 
 // Use cases - Fallback user creation if needed
@@ -107,11 +107,14 @@ features/{feature-name}/
 │   ├── http/
 │   │   └── {entity}.actions.ts     # Server Actions
 │   └── persistence/
-│       └── {implementation}-{entity}.repository.ts
+│       ├── {implementation}-{entity}.repository.ts
+│       └── repository.instance.ts  # DI Container
 │
 └── presentation/
     └── components/
-        └── {feature}-page.tsx
+        ├── {entity}-form.tsx
+        ├── {entity}-list.tsx
+        └── {entity}-item.tsx
 ```
 
 ---
@@ -290,7 +293,7 @@ Presentation uses → Infrastructure (Primary Adapters) only ✓
 
 2. **Update Factory** if needed (`domain/time-record.factory.ts`)
 
-3. **Update UI** (`presentation/components/timer-page.tsx`)
+3. **Update UI components** (`presentation/components/timer-form.tsx`, etc.)
 
 4. **No changes needed** in Application or Infrastructure (ports stay the same)
 
@@ -298,7 +301,9 @@ Presentation uses → Infrastructure (Primary Adapters) only ✓
 
 ### Task: Swap Database Implementation
 
-To change from Supabase to a different database:
+**Note**: This project uses Supabase for both local development and production. Switching between environments only requires changing environment variables (`.env.local` vs `.env.production`), not code changes.
+
+However, if you wanted to switch to a completely different database technology (e.g., MongoDB, MySQL), you would:
 
 ```typescript
 // infrastructure/persistence/repository.instance.ts
@@ -307,15 +312,15 @@ To change from Supabase to a different database:
 import { createSupabaseRepository } from './supabase-time-record.repository';
 export const timeRecordRepository = createSupabaseRepository();
 
-// After (Different Database) - Change in ONE file only!
-import { createPostgresRepository } from './postgres-time-record.repository';
-export const timeRecordRepository = createPostgresRepository();
+// After (Different Database Technology)
+import { createMongoRepository } from './mongo-time-record.repository';
+export const timeRecordRepository = createMongoRepository();
 ```
 
 **Benefits of hexagonal architecture**:
 
 - ✅ Zero changes needed in Domain, Application, or Presentation layers
-- ✅ Environment switching (dev/prod) handled by configuration only
+- ✅ Environment switching (local/cloud Supabase) handled by `.env` files only
 - ✅ Clean separation between business logic and technical implementation
 
 ---
@@ -440,7 +445,7 @@ describe('saveTimeRecordUseCase', () => {
 ### ❌ DON'T: Import Use Cases in Presentation
 
 ```typescript
-// presentation/components/timer-page.tsx
+// presentation/components/timer-form.tsx
 import { saveTimeRecordUseCase } from '../../application/use-cases/save-time-record'; // ❌ WRONG
 ```
 
@@ -520,16 +525,18 @@ export async function saveTimeRecordAction(input: Input) {
 
 ### Where does X go?
 
-| What                     | Layer          | Location                                     |
-| ------------------------ | -------------- | -------------------------------------------- |
-| Type definitions         | Domain         | `domain/{entity}.types.ts`                   |
-| Validation schemas (Zod) | Domain         | `domain/{entity}.types.ts`                   |
-| Business rules           | Domain         | `domain/{entity}.factory.ts` or `.utils.ts`  |
-| Repository interfaces    | Application    | `application/ports/{entity}.repository.ts`   |
-| Use case orchestration   | Application    | `application/use-cases/{action}-{entity}.ts` |
-| Server Actions           | Infrastructure | `infrastructure/http/{entity}.actions.ts`    |
-| Database implementation  | Infrastructure | `infrastructure/persistence/*.repository.ts` |
-| React components         | Presentation   | `presentation/components/*.tsx`              |
+| What                     | Layer          | Location                                            |
+| ------------------------ | -------------- | --------------------------------------------------- |
+| Type definitions         | Domain         | `domain/{entity}.types.ts`                          |
+| Validation schemas (Zod) | Domain         | `domain/{entity}.types.ts`                          |
+| Business rules           | Domain         | `domain/{entity}.factory.ts` or `.utils.ts`         |
+| Repository interfaces    | Application    | `application/ports/{entity}.repository.ts`          |
+| Use case orchestration   | Application    | `application/use-cases/{action}-{entity}.ts`        |
+| Server Actions           | Infrastructure | `infrastructure/http/{entity}.actions.ts`           |
+| Database implementation  | Infrastructure | `infrastructure/persistence/*.repository.ts`        |
+| Repository instances     | Infrastructure | `infrastructure/persistence/repository.instance.ts` |
+| React components         | Presentation   | `presentation/components/*.tsx`                     |
+| Next.js pages            | App Router     | `app/*/page.tsx` (imports from presentation)        |
 
 ---
 

@@ -56,12 +56,20 @@ features/
 │   ├── domain/
 │   ├── application/
 │   ├── infrastructure/
+│   │   ├── http/
+│   │   └── persistence/
+│   │       └── repository.instance.ts  # DI Container
 │   └── presentation/
+│       └── components/
 │
-└── user-management/       ← Another feature (future)
+└── auth/              ← Authentication feature
     ├── domain/
     ├── application/
-    └── ...
+    ├── infrastructure/
+    └── presentation/
+
+app/                   ← Next.js App Router
+└── page.tsx          ← Imports from presentation layer
 ```
 
 ### Why Vertical Slices?
@@ -244,16 +252,18 @@ export const createSupabaseRepository = (): TimeRecordRepository => {
 **Example**:
 
 ```typescript
-// presentation/components/timer-page.tsx
+// presentation/components/timer-form.tsx
 'use client';
 
 import { saveTimeRecordAction } from '../../infrastructure/http/time-record.actions';
 
-export function TimerPage() {
+export function TimerForm() {
   const handleSave = async () => {
     const result = await saveTimeRecordAction(description, seconds);
     // Update UI...
   };
+
+  return <form onSubmit={handleSave}>{/* Form fields */}</form>;
 }
 ```
 
@@ -315,35 +325,43 @@ export const createSupabaseRepository = (): TimeRecordRepository => {
 ### Complete Request Flow
 
 ```
-1. User clicks button
+1. User clicks button (app/page.tsx)
    ↓
-2. React Component (Presentation)
+2. React Component (presentation/components/timer-form.tsx)
    ↓
-3. Server Action (Infrastructure - Primary Adapter)
+3. Server Action (infrastructure/http/time-record.actions.ts)
    ↓
-4. Use Case (Application)
+4. Use Case (application/use-cases/save-time-record.ts)
    ↓
-5. Domain Logic (Domain)
+5. Domain Logic (domain/time-record.factory.ts)
    ↓
-6. Repository Port (Application - Interface)
+6. Repository Port (application/ports/time-record.repository.ts - Interface)
    ↓
-7. Repository Implementation (Infrastructure - Secondary Adapter)
+7. Repository Instance (infrastructure/persistence/repository.instance.ts - DI Container)
    ↓
-8. Database / Storage
+8. Repository Implementation (infrastructure/persistence/supabase-time-record.repository.ts)
+   ↓
+9. Database (Supabase PostgreSQL)
 ```
 
 ### Example Flow: Saving a Time Record
 
 ```typescript
-// 1. USER ACTION (Presentation)
-<button onClick={handleSave}>Save</button>;
+// 1. USER ACTION (App Router Page)
+// app/page.tsx
+import { Timer } from '@/features/time-record/presentation/components/timer';
+export default function HomePage() {
+  return <Timer />;
+}
 
-// 2. COMPONENT HANDLER (Presentation)
+// 2. COMPONENT (Presentation)
+// presentation/components/timer-form.tsx
 const handleSave = async () => {
   const result = await saveTimeRecordAction(description, seconds);
 };
 
 // 3. SERVER ACTION (Infrastructure - Primary)
+// infrastructure/http/time-record.actions.ts
 ('use server');
 export async function saveTimeRecordAction(
   description: string,
@@ -356,17 +374,27 @@ export async function saveTimeRecordAction(
 }
 
 // 4. USE CASE (Application)
+// application/use-cases/save-time-record.ts
+import { timeRecordRepository } from '../../infrastructure/persistence/repository.instance';
+
 export const saveTimeRecordUseCase = async (input: CreateTimeRecordInput) => {
   const record = createTimeRecord(input); // Domain
-  await timeRecordRepository.save(record); // Port
+  await timeRecordRepository.save(record); // Uses DI Container instance
 };
 
 // 5. DOMAIN LOGIC (Domain)
+// domain/time-record.factory.ts
 export const createTimeRecord = (input: CreateTimeRecordInput): TimeRecord => {
   return { id: crypto.randomUUID(), ...input, createdAt: new Date() };
 };
 
-// 6. REPOSITORY IMPLEMENTATION (Infrastructure - Secondary)
+// 6. DI CONTAINER (Infrastructure)
+// infrastructure/persistence/repository.instance.ts
+import { createSupabaseRepository } from './supabase-time-record.repository';
+export const timeRecordRepository = createSupabaseRepository();
+
+// 7. REPOSITORY IMPLEMENTATION (Infrastructure - Secondary)
+// infrastructure/persistence/supabase-time-record.repository.ts
 export const createSupabaseRepository = (): TimeRecordRepository => {
   return {
     save: async (record) => {
@@ -459,23 +487,45 @@ Component → Server Action → Use Case
 
 ---
 
-### Why InMemory Repository?
+### Why Supabase with Local Development?
 
-For learning purposes, we use Supabase PostgreSQL with local development:
+For both learning and production, we use Supabase PostgreSQL:
 
 **Benefits**:
 
-- No database setup needed
-- Fast prototyping
-- Easy to understand
-- Can be replaced with real DB later (that's the point of ports!)
+- Real PostgreSQL database (not just in-memory)
+- Row Level Security (RLS) for data isolation
+- Anonymous authentication support
+- Seamless transition from local to production (same technology)
+- Can still be replaced with other databases if needed (that's the point of ports!)
 
-**Migration Path**:
+**Environment Switching** (Local ↔ Production):
+
+```bash
+# Local Development
+NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-local-anon-key
+
+# Production
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-production-anon-key
+```
+
+**No code changes needed!** The same `createSupabaseRepository()` factory works with both local and cloud instances.
+
+**Migration to Different Database Technology** (hypothetical):
 
 ```typescript
-// Easy to swap:
-// const repository = createInMemoryRepository();
-const repository = createPostgresRepository();
+// infrastructure/persistence/repository.instance.ts
+
+// Current: Supabase (local & production)
+export const timeRecordRepository = createSupabaseRepository();
+
+// Hypothetical: Switch to MongoDB (would require implementing new adapter)
+// export const timeRecordRepository = createMongoRepository();
+
+// Hypothetical: Testing with in-memory
+// export const timeRecordRepository = createInMemoryRepository();
 ```
 
 ---
@@ -525,24 +575,38 @@ describe('InMemoryRepository', () => {
 1. Create feature folder: `features/my-feature/`
 2. Add domain layer (types, factories)
 3. Add application layer (ports, use cases)
-4. Add infrastructure (adapters)
-5. Add presentation (UI)
+4. Add infrastructure (adapters + repository.instance.ts for DI)
+5. Add presentation (UI components)
+6. Import presentation components in App Router pages (`app/`)
 
 ### Swapping Repository Implementation
 
-```typescript
-// Before (Supabase)
-import { createSupabaseRepository } from './infrastructure/persistence/supabase-time-record.repository';
+**Note**: This project uses Supabase for both local and production environments. Switching between them only requires updating environment variables, not code.
 
-// After (Different Database)
-import { createMongoRepository } from './infrastructure/persistence/mongo-time-record.repository';
+This example shows how you would swap to a completely different database technology:
+
+```typescript
+// infrastructure/persistence/repository.instance.ts
+
+// Before (Supabase - local & production)
+import { createSupabaseRepository } from './supabase-time-record.repository';
+export const timeRecordRepository = createSupabaseRepository();
+
+// After (Hypothetical: Different Database Technology) - Change in ONE file only!
+import { createMongoRepository } from './mongo-time-record.repository';
+export const timeRecordRepository = createMongoRepository();
 
 // Use case doesn't change!
+// application/use-cases/save-time-record.ts
+import { timeRecordRepository } from '../../infrastructure/persistence/repository.instance';
+
 export const saveTimeRecordUseCase = async (input: CreateTimeRecordInput) => {
   const record = createTimeRecord(input);
-  await timeRecordRepository.save(record); // Same interface!
+  await timeRecordRepository.save(record); // Same interface, different implementation!
 };
 ```
+
+**Real-world usage**: For this project, you only need to update `.env` files to switch between local Supabase and production Supabase. No code changes required.
 
 ---
 

@@ -62,34 +62,47 @@ src/features/time-record/
 ## 📂 Project Structure
 
 ```
-src/
-├── features/
-│   └── time-record/
-│       ├── domain/
-│       │   ├── time-record.types.ts      # Types & Zod schemas
-│       │   ├── time-record.factory.ts    # Factory functions
-│       │   └── time-record.utils.ts      # Domain utilities
-│       │
-│       ├── application/
-│       │   ├── ports/
-│       │   │   └── time-record.repository.ts  # Repository interface
-│       │   └── use-cases/
-│       │       ├── save-time-record.ts
-│       │       └── get-all-time-records.ts
-│       │
-│       ├── infrastructure/
-│       │   ├── http/
-│       │   │   └── time-record.actions.ts     # Server Actions
-│       │   └── persistence/
-│       │       ├── supabase-time-record.repository.ts
-│       │       └── repository.instance.ts     # DI Container
-│       │
-│       └── presentation/
-│           └── components/
-│               └── timer-page.tsx
+src/features/
+├── time-record/
+│   ├── domain/
+│   │   ├── time-record.types.ts      # Types & Zod schemas
+│   │   ├── time-record.factory.ts    # Factory functions
+│   │   └── time-record.utils.ts      # Domain utilities
+│   │
+│   ├── application/
+│   │   ├── ports/
+│   │   │   └── time-record.repository.ts  # Repository interface
+│   │   └── use-cases/
+│   │       ├── save-time-record.ts
+│   │       └── get-all-time-records.ts
+│   │
+│   ├── infrastructure/
+│   │   ├── http/
+│   │   │   └── time-record.actions.ts     # Server Actions
+│   │   └── persistence/
+│   │       ├── supabase-time-record.repository.ts  # Supabase implementation
+│   │       └── repository.instance.ts     # DI Container
+│   │
+│   └── presentation/
+│       └── components/
+│           ├── timer.tsx              # Main timer component
+│           ├── timer-form.tsx         # Timer form
+│           ├── time-records-list.tsx  # Records list
+│           └── time-record-item.tsx   # Individual record
 │
-└── app/
-    └── page.tsx
+├── auth/
+│   ├── domain/
+│   ├── application/
+│   ├── infrastructure/
+│   └── presentation/
+│
+└── shared/
+    └── infrastructure/
+        └── persistence/
+            └── supabase-middleware.ts
+
+app/
+└── page.tsx          # Next.js App Router page (imports from presentation)
 ```
 
 ## 🚀 Getting Started
@@ -109,15 +122,33 @@ git clone <repository-url>
 # Install dependencies
 npm install
 
-# Set up environment variables
+# Set up environment variables for local development
 cp .env.local.example .env.local
-# Add your Supabase URL and anon key
+# Add your local Supabase URL and anon key
+
+# Run local Supabase (optional, if using Supabase locally)
+npx supabase start
 
 # Run development server
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+### 🚀 Deployment
+
+To deploy to production:
+
+1. Create a Supabase project at [supabase.com](https://supabase.com)
+2. Update environment variables:
+   ```bash
+   # .env.production or deployment platform settings
+   NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your-production-anon-key
+   ```
+3. Deploy to your platform (Vercel, etc.)
+
+**No code changes needed!** The same repository implementation works with both local and cloud Supabase instances.
 
 ### 🔐 Authentication
 
@@ -158,6 +189,17 @@ export type TimeRecordRepository = {
   save: (record: TimeRecord) => Promise<TimeRecord>;
   findAll: () => Promise<TimeRecord[]>;
 };
+
+// application/use-cases/save-time-record.ts
+import { timeRecordRepository } from '../../infrastructure/persistence/repository.instance';
+
+export const saveTimeRecordUseCase = async (
+  input: CreateTimeRecordInput
+): Promise<Result<void>> => {
+  const record = createTimeRecord(input);
+  await timeRecordRepository.save(record); // Uses DI Container
+  return { success: true };
+};
 ```
 
 ### 3. Infrastructure Layer (Adapters)
@@ -178,7 +220,7 @@ export async function saveTimeRecordAction(
 }
 ```
 
-**Secondary Adapters** (Output - Repository):
+**Secondary Adapters** (Output - Repository + DI Container):
 
 ```typescript
 // infrastructure/persistence/supabase-time-record.repository.ts
@@ -186,13 +228,28 @@ export const createSupabaseRepository = (): TimeRecordRepository => {
   return {
     save: async (record) => {
       const supabase = await createClient();
-      const { data } = await supabase.from('time_records').insert(record);
+      const { data } = await supabase
+        .from('time_records')
+        .insert(record)
+        .select()
+        .single();
       return data;
+    },
+    findAll: async () => {
+      const supabase = await createClient();
+      const { data } = await supabase
+        .from('time_records')
+        .select('*')
+        .order('created_at', { ascending: false });
+      return data || [];
     },
   };
 };
 
 // infrastructure/persistence/repository.instance.ts (DI Container)
+import { createSupabaseRepository } from './supabase-time-record.repository';
+
+// Single source of truth for repository instance
 export const timeRecordRepository = createSupabaseRepository();
 ```
 
@@ -201,11 +258,30 @@ export const timeRecordRepository = createSupabaseRepository();
 Pure React components that call Server Actions:
 
 ```typescript
-// presentation/components/timer-page.tsx
-const handleSave = async () => {
-  const result = await saveTimeRecordAction(description, seconds);
-  // Handle result...
-};
+// presentation/components/timer-form.tsx
+'use client';
+
+import { saveTimeRecordAction } from '../../infrastructure/http/time-record.actions';
+
+export function TimerForm() {
+  const handleSave = async () => {
+    const result = await saveTimeRecordAction(description, seconds);
+    // Handle result...
+  };
+
+  return <form>{/* Form fields */}</form>;
+}
+
+// app/page.tsx (Next.js App Router)
+import { Timer } from '@/features/time-record/presentation/components/timer';
+
+export default async function HomePage() {
+  return (
+    <main>
+      <Timer />
+    </main>
+  );
+}
 ```
 
 ## 🎓 Learning Resources
@@ -213,7 +289,9 @@ const handleSave = async () => {
 ### Dependency Flow
 
 ```
-Presentation → Infrastructure (Primary) → Application → Domain ← Infrastructure (Secondary)
+App Router Page → Presentation Components → Server Actions (Infrastructure Primary)
+→ Use Cases (Application) → Domain Logic → Repository Instance (DI Container)
+→ Repository Implementation (Infrastructure Secondary) → Database
 ```
 
 **Golden Rule**: Inner layers should NOT depend on outer layers.
@@ -222,7 +300,8 @@ Presentation → Infrastructure (Primary) → Application → Domain ← Infrast
 
 - ✅ **Testable**: Each layer can be tested independently
 - ✅ **Maintainable**: Clear separation of concerns
-- ✅ **Flexible**: Easy to swap implementations (e.g., change from Supabase to other databases)
+- ✅ **Flexible**: Easy to swap implementations (e.g., change database technology)
+- ✅ **Environment-Ready**: Switch between local/production via environment variables only
 - ✅ **Scalable**: Add features without affecting existing code
 
 ## 🛠️ Tech Stack
@@ -249,11 +328,13 @@ Presentation → Infrastructure (Primary) → Application → Domain ← Infrast
 - [x] Add anonymous authentication with RLS
 - [x] Implement middleware-based auth (no React Context)
 - [x] Transparent anonymous user creation
+- [x] Add DI Container pattern for repository instances
 - [ ] Add editing/deleting records
 - [ ] Add categories/tags
 - [ ] Export data to CSV
 - [ ] Add unit tests
-- [ ] Add user registration/login
+- [ ] Add integration tests
+- [ ] Add user registration/login (upgrade from anonymous)
 
 ## 📚 Further Reading
 
