@@ -2,7 +2,7 @@ export function ArchitectureInfo() {
   return (
     <div className="mt-8 bg-white rounded-2xl shadow-xl p-6">
       <h3 className="text-lg font-bold text-gray-800 mb-3">
-        🏗️ Estructura Funcional
+        🏗️ Functional Structure
       </h3>
       <div className="space-y-2 text-sm">
         <div className="p-3 bg-purple-50 rounded-lg">

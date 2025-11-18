@@ -18,10 +18,10 @@ export function RecordsList({ recordsPromise }: RecordsListProps) {
     return (
       <div className="bg-white rounded-2xl shadow-xl p-8">
         <h2 className="text-2xl font-bold text-gray-800 mb-6">
-          📋 Historial de Registros
+          📋 Records History
         </h2>
         <p className="text-gray-500 text-center py-8">
-          No hay registros aún. ¡Comienza a trackear tu tiempo!
+          No records yet. Start tracking your time!
         </p>
       </div>
     );
@@ -30,7 +30,7 @@ export function RecordsList({ recordsPromise }: RecordsListProps) {
   return (
     <div className="bg-white rounded-2xl shadow-xl p-8">
       <h2 className="text-2xl font-bold text-gray-800 mb-6">
-        📋 Historial de Registros
+        📋 Records History
       </h2>
 
       <div className="space-y-4">

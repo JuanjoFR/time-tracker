@@ -9,7 +9,7 @@ export const formatDuration = (seconds: number): string => {
 };
 
 export const formatDate = (date: Date): string => {
-  return new Intl.DateTimeFormat('es-ES', {
+  return new Intl.DateTimeFormat('en-US', {
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(date);
